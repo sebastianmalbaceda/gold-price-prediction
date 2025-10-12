@@ -1,2 +1,110 @@
-# gold-price-prediction
-Proyecto de aprendizaje automático para la predicción del precio del oro, desarrollado como Trabajo de Fin de Grado (TFG). Incluye análisis exploratorio, ingeniería de características, selección y entrenamiento de modelos, validación y análisis final.
+# 🪙 Gold Price Prediction
+
+Proyecto de aprendizaje automático para la **predicción del precio del oro**, desarrollado como parte de mi **Trabajo de Fin de Grado (TFG)**.
+Incluye análisis exploratorio, ingeniería de características, selección y entrenamiento de modelos, validación y análisis final.
+
+---
+
+## 🎯 Objetivos
+
+* Reunir y depurar una amplia colección de características (macroeconómicas, financieras, commodities, volatilidad, divisas, etc.) relacionadas con el precio del oro.
+* Realizar un análisis exploratorio completo (EDA) y una selección de variables rigurosa.
+* Evaluar diferentes modelos de predicción, desde regresores lineales hasta modelos basados en árboles y ensambles.
+* Comparar su rendimiento mediante métricas de evaluación robustas.
+* Analizar los resultados y discutir las conclusiones del comportamiento del oro.
+
+---
+
+## 📊 Dataset y características
+
+El dataset se compone de **aproximadamente 60 variables** recopiladas de fuentes oficiales como **FRED**, **Investing.com**, **CBOE**, **OECD**, y otros organismos financieros.
+Cada característica incluye su frecuencia, fuente y justificación económica.
+
+🔎 Puedes consultar el listado completo en:
+[`docs/features_reference.md`](docs/features_reference.md)
+
+---
+
+## 🧱 Estructura del repositorio
+
+```
+gold-price-prediction/
+│
+├── notebooks/
+│   ├── 01_exploratory_analysis.ipynb
+│   ├── 02_feature_engineering.ipynb
+│   ├── 03_model_training.ipynb
+│   └── 04_results_analysis.ipynb
+│
+├── src/
+│   ├── stage_1_exploration.py
+│   ├── stage_2_feature_engineering.py
+│   ├── stage_3_model_training.py
+│   └── utils/
+│       └── data_loader.py
+│
+├── data/
+│   ├── raw/              # Datos originales descargados
+│   ├── processed/        # Datos procesados o transformados
+│   └── features_info.csv # Información detallada de cada feature
+│
+├── docs/
+│   └── features_reference.md
+│
+├── reports/
+│   └── figures/
+│
+├── requirements.txt
+├── README.md
+├── .gitignore
+└── LICENSE
+```
+
+---
+
+## ⚙️ Instalación y uso
+
+1. **Clonar el repositorio**
+
+   ```bash
+   git clone https://github.com/<tu-usuario>/gold-price-prediction.git
+   cd gold-price-prediction
+   ```
+
+2. **Crear y activar un entorno virtual**
+
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate   # (Linux/Mac)
+   .venv\Scripts\activate      # (Windows)
+   ```
+
+3. **Instalar dependencias**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Ejecutar los notebooks o scripts**
+
+   ```bash
+   jupyter notebook
+   # o
+   python src/stage_1_exploration.py
+   ```
+
+---
+
+## 📚 Licencia
+
+Este proyecto se distribuye bajo la licencia **MIT**.
+Puedes usarlo, modificarlo o citarlo siempre que mantengas la referencia al autor original.
+
+---
+
+## ✍️ Autor
+
+**Sebastián Malbaceda Leyva**
+Trabajo de Fin de Grado — Universidad Autònoma de Barcelona
+📧 [sebastian.malbaceda.leyva@gmail.com](mailto:sebastian.malbaceda.leyva@gmail.com)
+🕳️ Año académico 2025
