@@ -128,7 +128,7 @@ gold-price-prediction/
 
 📥 **Descarga del dataset:** 
 
-[💾 Dataset Consolidado](https://github.com/<tu-usuario>/<tu-repo>/releases)  
+[💾 Dataset Consolidado](https://github.com/sebastianmalbaceda/gold-price-prediction/releases)  
 
 ---
 
