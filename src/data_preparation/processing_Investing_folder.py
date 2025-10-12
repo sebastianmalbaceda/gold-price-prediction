@@ -2,8 +2,8 @@ import os
 import pandas as pd
 
 # Carpetas
-input_folder = "../data/raw/Investing"          # CSV originales Investing
-output_folder = "../data/processed/Investing_processed"  # CSV limpios
+input_folder = "../../data/raw/Investing"          # CSV originales Investing
+output_folder = "../../data/processed/Investing_processed"  # CSV limpios
 
 os.makedirs(output_folder, exist_ok=True)
 

@@ -143,6 +143,6 @@ def main(input_folder, output_folder):
 
 
 if __name__ == "__main__":
-    input_folder = "../data/raw/Others"          # CSV originales Others
-    output_folder = "../data/processed/Others_processed"  # CSV limpios
+    input_folder = "../../data/raw/Others"          # CSV originales Others
+    output_folder = "../../data/processed/Others_processed"  # CSV limpios
     main(input_folder, output_folder)

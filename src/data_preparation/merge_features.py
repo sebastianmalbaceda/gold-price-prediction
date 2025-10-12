@@ -58,10 +58,10 @@ def consolidate_csv_folders(folders, output_file):
 
 if __name__ == "__main__":
     input_folders = [
-        "../data/processed/FRED_processed",
-        "../data/processed/Investing_processed",
-        "../data/processed/Others_processed"
+        "../../data/processed/FRED_processed",
+        "../../data/processed/Investing_processed",
+        "../../data/processed/Others_processed"
     ]
-    output_file = "../data/dataset.csv"          # CSV consolidado final
+    output_file = "../../data/dataset.csv"          # CSV consolidado final
     consolidate_csv_folders(input_folders, output_file)
 
