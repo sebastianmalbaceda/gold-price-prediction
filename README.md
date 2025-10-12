@@ -31,12 +31,15 @@ Cada característica incluye su frecuencia, fuente y justificación económica.
 gold-price-prediction/
 │
 ├── notebooks/
-│   ├── 01_exploratory_analysis.ipynb
-│   ├── 02_feature_engineering.ipynb
-│   ├── 03_model_training.ipynb
-│   └── 04_results_analysis.ipynb
+│   └── gold-price-prediction.ipynb
 │
 ├── src/
+│   ├── data_preparation/
+│   │   ├── processing_FRED_folder.py
+│   │   ├── processing_Investing_folder.py
+│   │   ├── processing_Others_folder.py
+│   │   └── merge_features.py
+│   │
 │   ├── stage_1_exploration.py
 │   ├── stage_2_feature_engineering.py
 │   ├── stage_3_model_training.py
@@ -44,12 +47,21 @@ gold-price-prediction/
 │       └── data_loader.py
 │
 ├── data/
-│   ├── raw/              # Datos originales descargados
-│   ├── processed/        # Datos procesados o transformados
-│   └── features_info.csv # Información detallada de cada feature
+│   ├── raw/
+│   │   ├── FRED/
+│   │   ├── Investing/
+│   │   └── Others/
+│   │
+│   ├── processed/
+│   │   ├── FRED_processed/
+│   │   ├── Investing_processed/
+│   │   └── Others_processed/
+│   │
+│   └── dataset.csv
 │
 ├── docs/
-│   └── features_reference.md
+│   ├── features_reference.md
+│   └── features_details.md
 │
 ├── reports/
 │   └── figures/
@@ -58,6 +70,7 @@ gold-price-prediction/
 ├── README.md
 ├── .gitignore
 └── LICENSE
+
 ```
 
 ---
@@ -74,7 +87,7 @@ gold-price-prediction/
 2. **Crear y activar un entorno virtual**
 
    ```bash
-   python -m venv .venv
+   python -m venv .venv        # O también py -m venv .venv
    source .venv/bin/activate   # (Linux/Mac)
    .venv\Scripts\activate      # (Windows)
    ```

@@ -96,7 +96,8 @@ El dataset presentado contiene todas las características recolectadas y sirve c
 
 Durante el proceso de análisis exploratorio (EDA), se evaluará la relevancia, consistencia y potencial predictivo de cada feature, descartando aquellas que no aporten valor o que puedan introducir sesgos. Esto garantiza que el modelo final se construya únicamente con variables útiles y justificadas.
 
+Para más información sobre cada feature, incluyendo descripción, impacto esperado y motivos de inclusión, consulte el documento [Features Details](features_details.md).
+
 ---
 
 **Total:** 62 columnas (60 features efectivas + `date` + `gold_spot` target)
-
