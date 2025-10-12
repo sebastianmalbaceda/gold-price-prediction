@@ -108,6 +108,31 @@ gold-price-prediction/
 
 ---
 
+## 💾 Dataset
+
+El dataset principal de este proyecto, ya procesado y consolidado a partir de múltiples fuentes (FRED, Investing, Others), puede descargarse desde la sección **Releases** de este repositorio. 
+
+Una vez descargado, se recomienda colocar los archivos en la carpeta del proyecto de la siguiente manera:
+
+```
+gold-price-prediction/
+├── data/
+│ ├── raw/ # Carpeta opcional con CSV originales de cada fuente
+│ ├── processed/ # Carpeta con CSV ya procesados individualmente
+│ └── dataset.csv # Dataset final consolidado y listo para análisis
+```
+
+
+> ⚠️ **Nota de uso:**  
+> Este dataset sirve como **punto de partida** para el análisis. Contiene todas las features recolectadas y unidas, incluyendo la columna `date` y el target `gold_spot`. No todas las features se usarán automáticamente; la selección final se realizará durante el EDA y modelado.
+
+📥 **Descarga del dataset:** 
+
+[💾 Dataset Consolidado](https://github.com/<tu-usuario>/<tu-repo>/releases)  
+
+---
+
+
 ## 📚 Licencia
 
 Este proyecto se distribuye bajo la licencia **MIT**.
