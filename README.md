@@ -105,6 +105,9 @@ Puedes usarlo, modificarlo o citarlo siempre que mantengas la referencia al auto
 ## ✍️ Autor
 
 **Sebastián Malbaceda Leyva**
+
 Trabajo de Fin de Grado — Universidad Autònoma de Barcelona
+
 📧 [sebastian.malbaceda.leyva@gmail.com](mailto:sebastian.malbaceda.leyva@gmail.com)
+
 🕳️ Año académico 2025
