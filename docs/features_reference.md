@@ -62,10 +62,9 @@ Este documento lista todas las características (features) recopiladas, procesad
 | 56 | **export_price_index.csv**         | Export Price Index (Nonmonetary Gold)       | Mensual    | [FRED](https://fred.stlouisfed.org/series/IQ12260)                                       | ✅      |
 | 57 | **fed_balance_walcl.csv**          | Balance Sheet FED                           | Semanal    | [FRED](https://fred.stlouisfed.org/series/WALCL)                                         | ✅      |
 | 58 | **us_financial_stress_index.csv**  | Financial Stress Index                      | Semanal    | [FRED](https://fred.stlouisfed.org/series/STLFSI4)                                       | ✅      |
-| 59 | **us_pmi_manufacturing.csv**       | PMI / ISM Manufacturing Index               | Mensual    | [TradingEconomics](https://tradingeconomics.com/united-states/business-confidence)       | ✅      |
-| 60 | **us_personal_saving_rate.csv**    | Personal Saving Rate                        | Mensual    | [FRED](https://fred.stlouisfed.org/series/PSAVERT)                                       | ✅      |
-| 61 | **us10y_real.csv**                 | Real Interest Rate (10Y)                    | Anual      | [FRED](https://fred.stlouisfed.org/series/REAINTRATREARAT10Y)                            | ✅      |
-| 62 | **move_index.csv**                 | MOVE Index (Volatilidad bonos)              | Diario     | [Investing](https://www.investing.com/indices/ice-bofaml-move)                           | ✅      |
+| 59 | **us_personal_saving_rate.csv**    | Personal Saving Rate                        | Mensual    | [FRED](https://fred.stlouisfed.org/series/PSAVERT)                                       | ✅      |
+| 60 | **us10y_real.csv**                 | Real Interest Rate (10Y)                    | Anual      | [FRED](https://fred.stlouisfed.org/series/REAINTRATREARAT10Y)                            | ✅      |
+| 61 | **move_index.csv**                 | MOVE Index (Volatilidad bonos)              | Diario     | [Investing](https://www.investing.com/indices/ice-bofaml-move)                           | ✅      |
 
 ### Features derivadas
 
@@ -78,9 +77,6 @@ Además de las features originales, se planea generar un conjunto de features de
 * Diferencias simples y cumulative returns
 * Opcionales: RSI, MACD, Bollinger Bands
 * Features temporales derivadas de la fecha (`month`, `day_of_week`)
-
-Ejemplo de feature derivada ya definida:
-* **yield_curve_slope** → Diferencia entre 10Y y 2Y (`us10y_yield - us2y_yield`)
 
 ### Features no conseguidas (por disponibilidad o complejidad)
 
@@ -100,4 +96,4 @@ Para más información sobre cada feature, incluyendo descripción, impacto espe
 
 ---
 
-**Total:** 62 columnas (60 features efectivas + `date` + `gold_spot` target)
+**Total:** 61 columnas (59 features efectivas + `date` + `gold_spot` target)

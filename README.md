@@ -1,11 +1,11 @@
-# 🪙 Gold Price Prediction
+# Gold Price Prediction
 
 Proyecto de aprendizaje automático para la **predicción del precio del oro**, desarrollado como parte de mi **Trabajo de Fin de Grado (TFG)**.
 Incluye análisis exploratorio, ingeniería de características, selección y entrenamiento de modelos, validación y análisis final.
 
 ---
 
-## 🎯 Objetivos
+## Objetivos
 
 * Reunir y depurar una amplia colección de características (macroeconómicas, financieras, commodities, volatilidad, divisas, etc.) relacionadas con el precio del oro.
 * Realizar un análisis exploratorio completo (EDA) y una selección de variables rigurosa.
@@ -15,17 +15,17 @@ Incluye análisis exploratorio, ingeniería de características, selección y en
 
 ---
 
-## 📊 Dataset y características
+## Dataset y características
 
 El dataset se compone de **aproximadamente 60 variables** recopiladas de fuentes oficiales como **FRED**, **Investing.com**, **CBOE**, **OECD**, y otros organismos financieros.
 Cada característica incluye su frecuencia, fuente y justificación económica.
 
-🔎 Puedes consultar el listado completo en:
+Puedes consultar el listado completo en:
 [`docs/features_reference.md`](docs/features_reference.md)
 
 ---
 
-## 🧱 Estructura del repositorio
+## Estructura del repositorio
 
 ```
 gold-price-prediction/
@@ -75,7 +75,7 @@ gold-price-prediction/
 
 ---
 
-## ⚙️ Instalación y uso
+## Instalación y uso
 
 1. **Clonar el repositorio**
 
@@ -108,7 +108,7 @@ gold-price-prediction/
 
 ---
 
-## 💾 Dataset
+## Dataset
 
 El dataset principal de este proyecto, ya procesado y consolidado a partir de múltiples fuentes (FRED, Investing, Others), puede descargarse desde la sección **Releases** de este repositorio. 
 
@@ -123,29 +123,29 @@ gold-price-prediction/
 ```
 
 
-> ⚠️ **Nota de uso:**  
+> **Nota de uso:**  
 > Este dataset sirve como **punto de partida** para el análisis. Contiene todas las features recolectadas y unidas, incluyendo la columna `date` y el target `gold_spot`. No todas las features se usarán automáticamente; la selección final se realizará durante el EDA y modelado.
 
-📥 **Descarga del dataset:** 
+**Descarga del dataset:** 
 
-[💾 Dataset Consolidado](https://github.com/sebastianmalbaceda/gold-price-prediction/releases)  
+[Dataset Consolidado](https://github.com/sebastianmalbaceda/gold-price-prediction/releases)  
 
 ---
 
 
-## 📚 Licencia
+## Licencia
 
 Este proyecto se distribuye bajo la licencia **MIT**.
 Puedes usarlo, modificarlo o citarlo siempre que mantengas la referencia al autor original.
 
 ---
 
-## ✍️ Autor
+## Autor
 
 **Sebastián Malbaceda Leyva**
 
 Trabajo de Fin de Grado — Universidad Autònoma de Barcelona
 
-📧 [sebastian.malbaceda.leyva@gmail.com](mailto:sebastian.malbaceda.leyva@gmail.com)
+[sebastian.malbaceda.leyva@gmail.com](mailto:sebastian.malbaceda.leyva@gmail.com)
 
-🕳️ Año académico 2025
+Año académico 2025
