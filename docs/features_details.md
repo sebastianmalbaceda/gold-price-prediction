@@ -80,7 +80,7 @@ Este documento amplía la información de cada feature incluida en el dataset in
 * **consumer_confidence** → Confianza del consumidor (OECD/FRED).
 * **geopolitical_risk** → Riesgo geopolítico. Incrementa demanda de oro como activo seguro.
 * **us_gdp / us_fiscal_deficit / us10y_real** → PIB, déficit fiscal, tasa real. Indicadores macro que pueden influir en el oro.
-* **fed_balance_walcl / us_financial_stress_index / us_pmi_manufacturing / us_personal_saving_rate / move_index** → Otros indicadores financieros y de liquidez del mercado, volatilidad, manufactura y ahorro.
+* **fed_balance_walcl / us_financial_stress_index / us_personal_saving_rate / move_index** → Otros indicadores financieros y de liquidez del mercado, volatilidad, manufactura y ahorro.
 
 ---
 
