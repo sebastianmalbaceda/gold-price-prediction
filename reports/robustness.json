@@ -1,19 +1,19 @@
 {
   "segment_performance": {
     "2023": {
-      "mae": 86.615,
-      "smape": 4.534,
-      "directional_accuracy": 49.035
+      "mae": 86.816,
+      "smape": 4.545,
+      "directional_accuracy": 48.263
     },
     "2024": {
-      "mae": 204.807,
-      "smape": 8.856,
-      "directional_accuracy": 45.594
+      "mae": 205.143,
+      "smape": 8.871,
+      "directional_accuracy": 45.211
     },
     "2025": {
-      "mae": 392.621,
-      "smape": 13.351,
-      "directional_accuracy": 47.826
+      "mae": 393.164,
+      "smape": 13.37,
+      "directional_accuracy": 49.068
     }
   },
   "covariate_shift": {

@@ -44,6 +44,7 @@ models:
     early_stopping: true
 model_selection:
   selected: ridge
-  reason: Mejor MAE en CV temporal (55.1 vs 197+ de arboles). Lineal regularizado
-    generaliza mejor en niveles no estacionarios.
-  val_mae_cv: 55.080949205728
+  reason: Mejor MAE en CV temporal y validation. Lineal regularizado generaliza mejor
+    en niveles no estacionarios.
+  val_mae_cv: 53.674602974443374
+  val_mae_holdout: 36.88678339598979

@@ -46,14 +46,16 @@ def main():
             continue
         stat, p = ks_2samp(a, b)
         if p < 0.01:
-            alerts.append({"feature": c, "ks": round(stat, 3), "p": round(p, 4)})
+            alerts.append({"feature": c,
+                           "ks": round(float(stat), 3),
+                           "p": round(float(p), 4)})
 
-    out = {"window_days": args.window,
+    out = {"window_days": int(args.window),
            "n_features_checked": len(sel_cols),
            "n_drift_alerts": len(alerts),
            "alerts": alerts}
     with open("reports/drift_report.json", "w") as f:
-        json.dump(out, f, indent=2)
+        json.dump(out, f, indent=2, default=float)
     print(f"Features con drift: {len(alerts)}/{len(sel_cols)}")
     for a in alerts[:15]:
         print(" ", a)

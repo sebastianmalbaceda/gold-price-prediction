@@ -5,6 +5,7 @@ Train 2000-2019 | Val 2020-2022 | Test 2023-2025 (configurado en config.yaml).
 """
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 
@@ -37,12 +38,28 @@ def drop_warmup(df: pd.DataFrame, warmup: int = 260) -> pd.DataFrame:
     cada columna (cubre lags 126d, rolling 126d y exógenas con huecos como
     us_gdp) y se eliminan todas las filas anteriores al máximo. Si se pasa
     `warmup` explícito, se usa max(warmup, warmup_por_feature).
+
+    La función es segura para dataframes sin NaN (no elimina nada por
+    defecto cuando warmup=0) y para dataframes vacíos.
     """
     if df.empty:
         return df
-    first_valid = df.notna().idxmax()  # primer índice no-NaN por columna
-    # Para columnas sin NaN, idxmax() es el primer índice -> no recorta
-    min_idx = max(int(first_valid.min()), int(first_valid.max())
-                  if first_valid.notna().all() else 0)
-    warmup_effective = max(int(warmup), min_idx) if warmup else min_idx
+
+    # Primer índice no-NaN por columna; para columnas sin NaN es 0
+    first_valid = df.notna().idxmax()
+    # Si TODAS las columnas tienen algún NaN, el máximo de primeros índices
+    # marca el calentamiento necesario; si alguna columna no tiene NaN,
+    # idxmax devuelve el primer índice (0) y no debe recortar.
+    if first_valid.notna().all():
+        # Hay columnas sin NaN: el warm-up por-feature solo aplica a las que
+        # tienen NaN inicial; tomar el máximo entre ellas.
+        cols_with_nan = df.columns[df.isna().any()]
+        if len(cols_with_nan) > 0:
+            warmup_by_feature = int(first_valid[cols_with_nan].max())
+        else:
+            warmup_by_feature = 0
+    else:
+        warmup_by_feature = int(first_valid.max())
+
+    warmup_effective = max(int(warmup), warmup_by_feature)
     return df.iloc[warmup_effective:].reset_index(drop=True)

@@ -119,6 +119,29 @@ pytest tests/ -q
 | `22_documentacion.ipynb` | 22. Documentación |
 | `23_monitorizacion.ipynb` | 23. Monitorización y reentrenamiento |
 
+## 🧪 Tests y calidad
+
+```bash
+pytest tests/ -q        # 20 tests (split, métricas, features, limpieza, API)
+python -m compileall -q src scripts tests   # verificación de sintaxis
+```
+
+CI en GitHub Actions (`.github/workflows/ci.yml`): tests + flake8 + black.
+Pre-commit hooks en `.pre-commit-config.yaml` (opcional).
+
+## 🐳 Despliegue con Docker
+
+```bash
+docker build -t gold-api .
+docker compose up -d     # API en http://localhost:8000
+```
+
+## 🗂️ Ficheros de repo
+
+`LICENSE` (MIT) · `pyproject.toml` · `pytest.ini` · `Makefile` ·
+`.env.example` · `.pre-commit-config.yaml` · `Dockerfile` ·
+`docker-compose.yml` · `.github/workflows/ci.yml` · `data/README.md`
+
 ## 📂 Estructura
 
 ```

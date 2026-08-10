@@ -1,0 +1,15 @@
+# ============================================================
+# docker-compose.yml - Gold Price Prediction API
+# ============================================================
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Monta los artefactos para poder actualizarlos sin rebuild
+      - ./models:/app/models:ro
+      - ./configs:/app/configs:ro
+    environment:
+      - MODEL_VERSION=1.0.0
+    restart: unless-stopped

@@ -45,9 +45,8 @@ def parse_source(path: Path) -> list[tuple[str, str]]:
         if current_type is None:
             continue  # cabecera fuera de celdas
         if not skip:
-            if current_type == "code":
-                # Las líneas de código van prefijadas con "# " en la fuente
-                line = line[2:] if line.startswith("# ") else line
+            # Las celdas de código en la fuente son Python real (los
+            # docstrings no van comentados); se copian tal cual.
             current.append(line)
     if current_type:
         cells.append((current_type, current))

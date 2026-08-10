@@ -6,10 +6,19 @@ import pandas as pd
 
 
 def smape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Symmetric Mean Absolute Percentage Error (%)."""
+    """Symmetric Mean Absolute Percentage Error (%).
+
+    sMAPE = 100 * mean( 2*|y - yhat| / (|y| + |yhat|) )
+
+    Si el denominador es 0 (ambos valores 0), la contribución se define
+    como 0 (error nulo) para evitar división por cero.
+    """
     y_true, y_pred = np.asarray(y_true, float), np.asarray(y_pred, float)
     denom = (np.abs(y_true) + np.abs(y_pred)) / 2.0
-    return float(np.mean(np.abs(y_true - y_pred) / denom) * 100)
+    num = np.abs(y_true - y_pred)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ratio = np.where(denom > 0, num / denom, 0.0)
+    return float(np.mean(ratio) * 100)
 
 
 def mape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -20,7 +29,10 @@ def mape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """% de veces que el signo del cambio predicho coincide con el real."""
+    """% de veces que el signo del cambio predicho coincide con el real.
+
+    DA = 100 * mean( sign(y_t - y_{t-1}) == sign(yhat_t - yhat_{t-1}) )
+    """
     y_true, y_pred = np.asarray(y_true, float), np.asarray(y_pred, float)
     change_true = np.diff(y_true)
     change_pred = np.diff(y_pred)
@@ -50,7 +62,14 @@ def regression_metrics(y_true: np.ndarray, y_pred: np.ndarray,
 
 
 def metrics_table(rows: list[dict]) -> pd.DataFrame:
-    """Tabla comparativa de métricas."""
+    """Tabla comparativa de métricas.
+
+    Conserva columnas adicionales (p.ej. "model") y ordena las métricas
+    estándar primero.
+    """
     df = pd.DataFrame(rows)
-    cols = ["horizon", "mae", "rmse", "r2", "smape", "mape", "directional_accuracy", "n"]
-    return df[[c for c in cols if c in df.columns]]
+    metric_cols = ["horizon", "mae", "rmse", "r2", "smape", "mape",
+                   "directional_accuracy", "n"]
+    present = [c for c in metric_cols if c in df.columns]
+    extra = [c for c in df.columns if c not in metric_cols]
+    return df[extra + present]

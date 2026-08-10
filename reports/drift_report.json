@@ -1,7 +1,7 @@
 {
-  "window_days": 60,
-  "n_features_checked": 85,
-  "n_drift_alerts": 44,
+  "window_days": 30,
+  "n_features_checked": 110,
+  "n_drift_alerts": 41,
   "alerts": [
     {
       "feature": "us10y_yield",
@@ -15,17 +15,17 @@
     },
     {
       "feature": "geopolitical_risk",
-      "ks": 0.584,
+      "ks": 0.565,
       "p": 0.0
     },
     {
       "feature": "usdjpy_exchange",
-      "ks": 0.992,
+      "ks": 0.995,
       "p": 0.0
     },
     {
       "feature": "eurusd_exchange",
-      "ks": 0.569,
+      "ks": 0.579,
       "p": 0.0
     },
     {
@@ -40,12 +40,12 @@
     },
     {
       "feature": "dxy_index",
-      "ks": 0.732,
+      "ks": 0.741,
       "p": 0.0
     },
     {
       "feature": "silver_spot",
-      "ks": 0.957,
+      "ks": 0.983,
       "p": 0.0
     },
     {
@@ -55,37 +55,37 @@
     },
     {
       "feature": "palladium_spot",
-      "ks": 0.77,
+      "ks": 0.81,
       "p": 0.0
     },
     {
       "feature": "platinum_spot",
-      "ks": 0.559,
+      "ks": 0.719,
       "p": 0.0
     },
     {
       "feature": "brent_spot",
-      "ks": 0.509,
+      "ks": 0.537,
       "p": 0.0
     },
     {
       "feature": "vix_index",
-      "ks": 0.308,
+      "ks": 0.463,
       "p": 0.0
     },
     {
       "feature": "commodities_bloomberg",
-      "ks": 0.601,
+      "ks": 0.617,
       "p": 0.0
     },
     {
       "feature": "commodities_crb",
-      "ks": 0.681,
+      "ks": 0.698,
       "p": 0.0
     },
     {
       "feature": "credit_spread",
-      "ks": 0.867,
+      "ks": 0.943,
       "p": 0.0
     },
     {
@@ -95,12 +95,12 @@
     },
     {
       "feature": "us_financial_stress_index",
-      "ks": 0.698,
+      "ks": 0.739,
       "p": 0.0
     },
     {
       "feature": "us_industrial_production",
-      "ks": 0.981,
+      "ks": 0.985,
       "p": 0.0
     },
     {
@@ -115,7 +115,7 @@
     },
     {
       "feature": "us_personal_saving_rate",
-      "ks": 0.603,
+      "ks": 0.72,
       "p": 0.0
     },
     {
@@ -160,27 +160,22 @@
     },
     {
       "feature": "gold_rollstd_5",
-      "ks": 0.729,
+      "ks": 0.691,
       "p": 0.0
     },
     {
       "feature": "gold_ret_roll21",
-      "ks": 0.246,
+      "ks": 0.343,
       "p": 0.0012
     },
     {
       "feature": "gold_rollstd_21",
-      "ks": 0.741,
-      "p": 0.0
-    },
-    {
-      "feature": "gold_ret_roll63",
-      "ks": 0.316,
+      "ks": 0.709,
       "p": 0.0
     },
     {
       "feature": "gold_rollstd_63",
-      "ks": 0.741,
+      "ks": 0.674,
       "p": 0.0
     },
     {
@@ -195,33 +190,23 @@
     },
     {
       "feature": "quarter",
-      "ks": 0.252,
-      "p": 0.0008
+      "ks": 0.496,
+      "p": 0.0
     },
     {
       "feature": "dayofyear",
-      "ks": 0.389,
+      "ks": 0.504,
       "p": 0.0
     },
     {
       "feature": "policy_uncertainty_lag1",
-      "ks": 0.901,
+      "ks": 0.893,
       "p": 0.0
     },
     {
       "feature": "geopolitical_risk_lag1",
-      "ks": 0.601,
+      "ks": 0.532,
       "p": 0.0
-    },
-    {
-      "feature": "usdcny_exchange_ret_lag1",
-      "ks": 0.209,
-      "p": 0.0095
-    },
-    {
-      "feature": "platinum_spot_ret_lag1",
-      "ks": 0.244,
-      "p": 0.0014
     }
   ]
 }

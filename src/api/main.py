@@ -7,6 +7,8 @@ Ejecución:
 """
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -67,22 +69,32 @@ def predict(req: PredictRequest):
     _ensure_loaded()
     try:
         date = pd.Timestamp(req.date)
-    except ValueError:
+    except (ValueError, TypeError):
         raise HTTPException(status_code=422, detail="Fecha inválida (use YYYY-MM-DD)")
 
-    # Validación del esquema: features exactas
+    # Validación del esquema: deben venir EXACTAMENTE las features del modelo
     missing = [c for c in _features if c not in req.features]
     if missing:
         raise HTTPException(status_code=422,
                             detail=f"Faltan features: {missing[:10]}...")
+    extra = [c for c in req.features if c not in _features]
+    if extra:
+        raise HTTPException(status_code=422,
+                            detail=f"Features no esperadas: {extra[:10]}...")
 
     # Construir vector en el orden exacto de entrenamiento
-    row = [float(req.features[c]) for c in _features]
+    try:
+        row = [float(req.features[c]) for c in _features]
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422,
+                            detail="Todas las features deben ser numéricas")
+
+    # Rechazar NaN/Inf (el modelo no los acepta y no son datos válidos)
+    if not all(math.isfinite(v) for v in row):
+        raise HTTPException(status_code=422,
+                            detail="Las features deben ser finitas (sin NaN/Inf)")
+
     X = np.asarray([row], dtype=np.float64)
-
-    if np.isnan(X).any():
-        raise HTTPException(status_code=422, detail="Hay valores NaN en las features")
-
     X_scaled = _preprocessor.transform(X)
     pred = float(_model.predict(X_scaled)[0])
     return PredictResponse(

@@ -1,0 +1,48 @@
+# ============================================================
+# GitHub Actions - CI
+# ============================================================
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+
+      - name: Tests unitarios
+        run: pytest tests/ -q
+
+      - name: Verificar sintaxis de fuentes de notebooks
+        run: |
+          python -m compileall -q src scripts tests
+          echo "Sintaxis OK"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar linters
+        run: pip install flake8 black
+      - name: Flake8 (src, scripts, tests)
+        run: flake8 src scripts tests --max-line-length=100 --extend-ignore=E203,W503 --exclude=notebooks
+      - name: Black check
+        run: black --check --line-length 100 --skip-string-normalization src scripts tests

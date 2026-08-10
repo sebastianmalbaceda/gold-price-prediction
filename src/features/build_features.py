@@ -70,13 +70,21 @@ def _gap_indicators(df: pd.DataFrame, exog: list[str], raw: pd.DataFrame | None)
     if raw is None:
         return df
     # Solo para columnas presentes en el dataframe limpio (las excluidas no tienen indicador)
-    present = [c for c in exog if c in df.columns and c not in ("date", "gold_spot")]
+    present = [c for c in exog
+               if c in df.columns and c not in ("date", "gold_spot")
+               and c in raw.columns]
+    if not present:
+        return df
     raw_idx = pd.DatetimeIndex(raw["date"])
     raw_series = raw.set_index("date")[present]
     aligned = raw_series.reindex(pd.DatetimeIndex(df["date"]))
-    for col in present:
-        df[f"{col}_missing"] = aligned[col].isna().astype("int8")
-    return df
+    missing_df = aligned.isna().astype("int8")
+    missing_df.columns = [f"{c}_missing" for c in missing_df.columns]
+    # Alinear por posición (no por índice): reset del índice para que el
+    # concat por columnas no haga un join externo y duplique filas.
+    missing_df = missing_df.reset_index(drop=True)
+    # Concatenar de una vez (evita fragmentación del DataFrame)
+    return pd.concat([df.reset_index(drop=True), missing_df], axis=1)
 
 
 def build_features(df: pd.DataFrame, cfg: dict | None = None,
@@ -94,6 +102,12 @@ def build_features(df: pd.DataFrame, cfg: dict | None = None,
     exog = [c for c in df.columns if c not in ("date", "gold_spot")]
     out = _exogenous_features(out, exog, f["exogenous_lags"])
     out = _gap_indicators(out, exog, raw)
+
+    # Defensa en profundidad: eliminar columnas completamente vacías
+    # (p.ej. indicadores _missing de features excluidas en versiones previas)
+    all_null = out.columns[out.isna().all()]
+    if len(all_null) > 0:
+        out = out.drop(columns=all_null)
 
     return out
 

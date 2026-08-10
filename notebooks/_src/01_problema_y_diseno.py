@@ -6,6 +6,7 @@
 # ## 0. Problema y contexto
 #
 # ### 0.1 Contexto
+#
 # - **Problema de negocio:** estimar el precio spot del oro (*gold_spot*, USD/oz) a 1, 5 y 21 días hábiles vista.
 # - **Usuario final:** analista de mercados / gestor de cartera que necesita una referencia cuantitativa de precios futuros.
 # - **Proceso actual sin IA:** heurísticas, reglas técnicas (soportes/resistencias) y juicio de analistas.
@@ -14,6 +15,7 @@
 # - **Alternativas no ML:** *naive* (último precio), media móvil, ARIMA.
 #
 # ### 0.2 Formulación técnica
+#
 # - **Tipo:** Forecasting de regresión univariante con covariables exógenas (múltiples horizontes).
 # - **Unidad de predicción:** día hábil (mercado COMEX/NYMEX).
 # - **Entrada disponible en el momento de predecir `t`:** precio del oro y 59 exógenas en `t` (y pasadas) — nunca futuras.
@@ -24,11 +26,12 @@
 # ## 1. Diseño técnico y reproducibilidad
 #
 # ### 1.1 Estructura del proyecto
+#
 # ```
 # gold-price-prediction-v2/
 # ├── configs/            # config.yaml (rutas, split, features) + params.yaml (hiperparámetros)
 # ├── data/raw|interim|processed/
-# ├── notebooks/          # 01_... a 12_... (una fase por notebook)
+# ├── notebooks/          # 01_... a 23_... (una fase por notebook)
 # ├── src/                # data, features, models, evaluation, api
 # ├── models/             # artefactos .joblib
 # ├── reports/figures/    # gráficos y métricas
@@ -37,6 +40,7 @@
 # ```
 #
 # ### 1.2 Reproducibilidad
+#
 # - Semilla global 42 (`src/utils.set_seed`).
 # - Python 3.11.9, dependencias fijadas en `requirements.txt`.
 # - Dataset versionado: `data/raw/gold-price-prediction-dataset.csv` (inmutable).
@@ -44,6 +48,7 @@
 # - Experimentos registrados en `reports/` (JSON + figuras).
 #
 # ## Resumen de la fase
+#
 # | Concepto | Valor |
 # |---|---|
 # | Problema | Regresión de precio spot del oro a 1/5/21 días |
@@ -55,7 +60,11 @@
 # ---
 
 # %%
-"""Bootstrap del path del proyecto (funciona desde cualquier cwd)."""
+"""Configuración del notebook: rutas raíz y semilla global.
+
+Este bloque se repite en todos los notebooks para que puedan ejecutarse
+desde cualquier directorio de trabajo (Jupyter, nbconvert, VS Code...).
+"""
 import sys
 from pathlib import Path
 
@@ -67,11 +76,22 @@ def _find_root():
         p = p.parent
     return Path.cwd()
 
-sys.path.insert(0, str(_find_root()))
+ROOT = _find_root()
+sys.path.insert(0, str(ROOT))
 
-"""Fase 0-1: verificación del entorno y estructura."""
+from src.utils import set_seed
+set_seed(42)
+
+print(f"Raíz del proyecto: {ROOT}")
+
+# %%
+"""Verificación del entorno: versiones de Python y librerías clave.
+
+Comprobamos que el entorno es el esperado (Python 3.11+, pandas, numpy,
+scikit-learn) antes de empezar. Si algo falla aquí, hay que revisar
+`requirements.txt` y el virtualenv.
+"""
 import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -79,12 +99,21 @@ import sklearn
 
 print("Python:", sys.version.split()[0])
 print("pandas:", pd.__version__, "| numpy:", np.__version__, "| sklearn:", sklearn.__version__)
-print("Proyecto:", Path.cwd())
 
+# %%
+"""Carga de la configuración global del proyecto.
+
+`configs/config.yaml` centraliza rutas, ventana temporal, split y features;
+`configs/params.yaml` guarda los hiperparámetros (resultado de la fase 14).
+Así el código no tiene valores mágicos y todo es reproducible.
+"""
 from src.config import get_config, get_params
 
 cfg = get_config()
-print("\nVentana de datos:", cfg["data"]["start_date"], "->", cfg["data"]["end_date"])
-print("Split:", cfg["split"])
-print("Horizontes:", cfg["target"]["horizons"])
-print("Modelos configurados:", list(get_params()["models"].keys()))
+params = get_params()
+
+print("Ventana de datos:", cfg["data"]["start_date"], "->", cfg["data"]["end_date"])
+print("Split temporal:", cfg["split"])
+print("Horizontes de predicción:", cfg["target"]["horizons"])
+print("Modelos configurados:", list(params["models"].keys()))
+print("Modelo seleccionado:", params.get("model_selection", {}).get("selected", "—"))
