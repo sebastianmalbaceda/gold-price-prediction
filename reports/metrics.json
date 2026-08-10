@@ -1,0 +1,8 @@
+{
+  "selected_model": "ridge",
+  "horizon": 1,
+  "params": {
+    "alpha": 0.002231010801867922
+  },
+  "config_version": "1.0.0"
+}

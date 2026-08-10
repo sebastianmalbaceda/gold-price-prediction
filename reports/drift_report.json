@@ -1,0 +1,227 @@
+{
+  "window_days": 60,
+  "n_features_checked": 85,
+  "n_drift_alerts": 44,
+  "alerts": [
+    {
+      "feature": "us10y_yield",
+      "ks": 0.771,
+      "p": 0.0
+    },
+    {
+      "feature": "policy_uncertainty",
+      "ks": 0.893,
+      "p": 0.0
+    },
+    {
+      "feature": "geopolitical_risk",
+      "ks": 0.584,
+      "p": 0.0
+    },
+    {
+      "feature": "usdjpy_exchange",
+      "ks": 0.992,
+      "p": 0.0
+    },
+    {
+      "feature": "eurusd_exchange",
+      "ks": 0.569,
+      "p": 0.0
+    },
+    {
+      "feature": "us2y_yield",
+      "ks": 0.841,
+      "p": 0.0
+    },
+    {
+      "feature": "usdinr_exchange",
+      "ks": 1.0,
+      "p": 0.0
+    },
+    {
+      "feature": "dxy_index",
+      "ks": 0.732,
+      "p": 0.0
+    },
+    {
+      "feature": "silver_spot",
+      "ks": 0.957,
+      "p": 0.0
+    },
+    {
+      "feature": "usdcny_exchange",
+      "ks": 0.669,
+      "p": 0.0
+    },
+    {
+      "feature": "palladium_spot",
+      "ks": 0.77,
+      "p": 0.0
+    },
+    {
+      "feature": "platinum_spot",
+      "ks": 0.559,
+      "p": 0.0
+    },
+    {
+      "feature": "brent_spot",
+      "ks": 0.509,
+      "p": 0.0
+    },
+    {
+      "feature": "vix_index",
+      "ks": 0.308,
+      "p": 0.0
+    },
+    {
+      "feature": "commodities_bloomberg",
+      "ks": 0.601,
+      "p": 0.0
+    },
+    {
+      "feature": "commodities_crb",
+      "ks": 0.681,
+      "p": 0.0
+    },
+    {
+      "feature": "credit_spread",
+      "ks": 0.867,
+      "p": 0.0
+    },
+    {
+      "feature": "sp500_futures",
+      "ks": 1.0,
+      "p": 0.0
+    },
+    {
+      "feature": "us_financial_stress_index",
+      "ks": 0.698,
+      "p": 0.0
+    },
+    {
+      "feature": "us_industrial_production",
+      "ks": 0.981,
+      "p": 0.0
+    },
+    {
+      "feature": "us_unemployment",
+      "ks": 0.803,
+      "p": 0.0
+    },
+    {
+      "feature": "fed_funds",
+      "ks": 0.898,
+      "p": 0.0
+    },
+    {
+      "feature": "us_personal_saving_rate",
+      "ks": 0.603,
+      "p": 0.0
+    },
+    {
+      "feature": "us_consumer_sentiment",
+      "ks": 0.924,
+      "p": 0.0
+    },
+    {
+      "feature": "consumer_confidence",
+      "ks": 0.856,
+      "p": 0.0
+    },
+    {
+      "feature": "fx_reserves_china",
+      "ks": 0.868,
+      "p": 0.0
+    },
+    {
+      "feature": "us10y_real",
+      "ks": 0.735,
+      "p": 0.0
+    },
+    {
+      "feature": "copper_spot",
+      "ks": 0.959,
+      "p": 0.0
+    },
+    {
+      "feature": "us_retail_sales",
+      "ks": 1.0,
+      "p": 0.0
+    },
+    {
+      "feature": "us_gdp",
+      "ks": 1.0,
+      "p": 0.0
+    },
+    {
+      "feature": "gold_spot_lag21",
+      "ks": 1.0,
+      "p": 0.0
+    },
+    {
+      "feature": "gold_rollstd_5",
+      "ks": 0.729,
+      "p": 0.0
+    },
+    {
+      "feature": "gold_ret_roll21",
+      "ks": 0.246,
+      "p": 0.0012
+    },
+    {
+      "feature": "gold_rollstd_21",
+      "ks": 0.741,
+      "p": 0.0
+    },
+    {
+      "feature": "gold_ret_roll63",
+      "ks": 0.316,
+      "p": 0.0
+    },
+    {
+      "feature": "gold_rollstd_63",
+      "ks": 0.741,
+      "p": 0.0
+    },
+    {
+      "feature": "gold_ret_roll126",
+      "ks": 0.823,
+      "p": 0.0
+    },
+    {
+      "feature": "gold_rollstd_126",
+      "ks": 1.0,
+      "p": 0.0
+    },
+    {
+      "feature": "quarter",
+      "ks": 0.252,
+      "p": 0.0008
+    },
+    {
+      "feature": "dayofyear",
+      "ks": 0.389,
+      "p": 0.0
+    },
+    {
+      "feature": "policy_uncertainty_lag1",
+      "ks": 0.901,
+      "p": 0.0
+    },
+    {
+      "feature": "geopolitical_risk_lag1",
+      "ks": 0.601,
+      "p": 0.0
+    },
+    {
+      "feature": "usdcny_exchange_ret_lag1",
+      "ks": 0.209,
+      "p": 0.0095
+    },
+    {
+      "feature": "platinum_spot_ret_lag1",
+      "ks": 0.244,
+      "p": 0.0014
+    }
+  ]
+}

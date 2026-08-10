@@ -1,0 +1,81 @@
+{
+  "segment_performance": {
+    "2023": {
+      "mae": 86.615,
+      "smape": 4.534,
+      "directional_accuracy": 49.035
+    },
+    "2024": {
+      "mae": 204.807,
+      "smape": 8.856,
+      "directional_accuracy": 45.594
+    },
+    "2025": {
+      "mae": 392.621,
+      "smape": 13.351,
+      "directional_accuracy": 47.826
+    }
+  },
+  "covariate_shift": {
+    "us10y_yield": {
+      "ks_stat": 0.574,
+      "p_value": 0.0
+    },
+    "policy_uncertainty": {
+      "ks_stat": 0.219,
+      "p_value": 0.0
+    },
+    "geopolitical_risk": {
+      "ks_stat": 0.367,
+      "p_value": 0.0
+    },
+    "usdjpy_exchange": {
+      "ks_stat": 0.952,
+      "p_value": 0.0
+    },
+    "eurusd_exchange": {
+      "ks_stat": 0.606,
+      "p_value": 0.0
+    },
+    "us2y_yield": {
+      "ks_stat": 0.827,
+      "p_value": 0.0
+    },
+    "usdinr_exchange": {
+      "ks_stat": 0.988,
+      "p_value": 0.0
+    },
+    "dxy_index": {
+      "ks_stat": 0.765,
+      "p_value": 0.0
+    },
+    "silver_spot": {
+      "ks_stat": 0.753,
+      "p_value": 0.0
+    },
+    "usdcny_exchange": {
+      "ks_stat": 0.502,
+      "p_value": 0.0
+    },
+    "palladium_spot": {
+      "ks_stat": 0.739,
+      "p_value": 0.0
+    },
+    "platinum_spot": {
+      "ks_stat": 0.336,
+      "p_value": 0.0
+    },
+    "brent_spot": {
+      "ks_stat": 0.501,
+      "p_value": 0.0
+    },
+    "vix_index": {
+      "ks_stat": 0.229,
+      "p_value": 0.0
+    },
+    "commodities_bloomberg": {
+      "ks_stat": 0.567,
+      "p_value": 0.0
+    }
+  }
+}

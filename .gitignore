@@ -1,0 +1,49 @@
+# ============================================================
+# .gitignore - Gold Price Prediction
+# ============================================================
+
+# Datos (inmutables pero grandes / con licencia)
+data/raw/
+data/interim/
+data/processed/
+!data/raw/*.md
+
+# Modelos y artefactos generados
+models/*.joblib
+models/*.pkl
+models/*.json
+
+# Entorno virtual
+.venv/
+venv/
+env/
+
+# Secretos
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Notebooks exportados
+notebooks/*_executed.html
+nbconvert/
+
+# Experimentos / logs
+logs/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Datos descargados por scripts
+data/external/

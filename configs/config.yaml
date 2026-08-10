@@ -1,0 +1,82 @@
+# ============================================================
+# Gold Price Prediction - Configuración global del proyecto
+# ============================================================
+
+project:
+  name: gold-price-prediction-v2
+  seed: 42
+
+data:
+  raw_path: data/raw/gold-price-prediction-dataset.csv
+  interim_path: data/interim/gold_clean.parquet
+  processed_dir: data/processed
+  train_path: data/processed/train.parquet
+  val_path: data/processed/val.parquet
+  test_path: data/processed/test.parquet
+  # Ventana de análisis (el dataset empieza en 1901 pero la cobertura
+  # fiable de gold_spot + exógenas diarias empieza ~2000)
+  start_date: "2000-01-01"
+  end_date: "2025-09-12"
+  # Umbral de nulos tras forward-fill para descartar features
+  max_missing_after_ffill: 0.10
+
+target:
+  # Variable objetivo (serie temporal financiera: regresión de precio)
+  name: gold_spot
+  # Horizontes de predicción (días hábiles a futuro)
+  horizons: [1, 5, 21]
+  primary_horizon: 1
+
+split:
+  # División temporal estricta (forecasting): nada de aleatoriedad
+  train: ["2000-01-01", "2019-12-31"]
+  val: ["2020-01-01", "2022-12-31"]
+  test: ["2023-01-01", "2025-09-12"]
+
+features:
+  # Lags de la serie objetivo
+  target_lags: [1, 2, 3, 5, 10, 21]
+  # Ventanas de rolling (media/desv/retornos) sobre el objetivo
+  rolling_windows: [5, 21, 63, 126]
+  # Lags de features exógenas (se usan tal cual + retornos)
+  exogenous_lags: [1]
+  # Features de calendario
+  calendar: true
+  # Variables exógenas excluidas por cobertura insuficiente o riesgo de fuga
+  excluded_features:
+    - us_fiscal_deficit     # cobertura ~0.3% en ventana
+    - us_gdp                # trimestral, huecos de 92 días
+    - google_trends_gold_element  # cobertura ~2.8%
+    - google_trends_gold_word    # cobertura ~2.8%
+    - copper_spot           # cobertura ~3.3%
+    - fx_reserves_china     # cobertura ~3.3%
+    - us_m2                 # cobertura ~3.3%
+    - us_industrial_production   # cobertura ~3.3%
+    - us_retail_sales       # cobertura ~3.3%
+    - us_consumer_sentiment # cobertura ~3.3%
+    - us_unemployment       # cobertura ~3.3%
+    - export_price_index    # cobertura ~3.3%
+    - us_cpi                # cobertura ~3.3%
+    - fed_funds             # cobertura ~3.3%
+    - consumer_confidence   # cobertura ~3.3%
+    - us_personal_saving_rate # cobertura ~3.3%
+    - us10y_real            # cobertura ~3.3%
+    - cftc_gold_positions   # cobertura ~10.7%
+    - fed_balance_walcl     # cobertura ~12.6%
+    - us_financial_stress_index # cobertura ~14.3%
+    - ovx_index             # cobertura ~42%, hueco de 961 días
+    - gold_volatility_gvz   # cobertura ~46%
+    - palladium_futures     # cobertura ~48%, hueco de 73 días
+    - sp500_index           # cobertura ~27%
+
+model:
+  models_dir: models
+  final_model_path: models/final_model.joblib
+  preprocessor_path: models/preprocessor.joblib
+  feature_list_path: models/feature_list.json
+  metrics_path: reports/metrics.json
+  version: "1.0.0"
+
+api:
+  host: "127.0.0.1"
+  port: 8000

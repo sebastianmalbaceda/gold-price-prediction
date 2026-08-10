@@ -1,0 +1,49 @@
+{
+  "ridge": {
+    "best_mae_cv": 55.080949205728,
+    "params": {
+      "alpha": 0.002231010801867922
+    }
+  },
+  "rf": {
+    "best_mae_cv": 226.98092205506356,
+    "params": {
+      "n_estimators": 300,
+      "max_depth": 13,
+      "min_samples_leaf": 10,
+      "max_features": 0.40386039813862934
+    }
+  },
+  "xgb": {
+    "best_mae_cv": 199.15814411753888,
+    "params": {
+      "n_estimators": 700,
+      "learning_rate": 0.0586849474316206,
+      "max_depth": 3,
+      "subsample": 0.998406612698974,
+      "colsample_bytree": 0.9037264722627157,
+      "reg_lambda": 8.519855425163747
+    }
+  },
+  "lgbm": {
+    "best_mae_cv": 196.7454038402082,
+    "params": {
+      "n_estimators": 800,
+      "learning_rate": 0.05092911283433821,
+      "num_leaves": 48,
+      "max_depth": 3,
+      "subsample": 0.9879639408647978,
+      "colsample_bytree": 0.9162213204002109,
+      "reg_lambda": 0.30803400529839686
+    }
+  },
+  "cat": {
+    "best_mae_cv": 226.85571879612772,
+    "params": {
+      "iterations": 800,
+      "learning_rate": 0.07045923396089553,
+      "depth": 4,
+      "l2_leaf_reg": 2.6641960893341508
+    }
+  }
+}

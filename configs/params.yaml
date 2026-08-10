@@ -1,0 +1,49 @@
+cv:
+  n_splits: 5
+  gap: 21
+tuning:
+  n_trials_light: 15
+  n_trials_full: 40
+  timeout_seconds: 900
+models:
+  ridge:
+    alpha: 0.002231010801867922
+  random_forest:
+    n_estimators: 300
+    max_depth: 13
+    min_samples_leaf: 10
+    max_features: 0.40386039813862934
+  xgboost:
+    n_estimators: 700
+    learning_rate: 0.0586849474316206
+    max_depth: 3
+    subsample: 0.998406612698974
+    colsample_bytree: 0.9037264722627157
+    reg_lambda: 8.519855425163747
+  lightgbm:
+    n_estimators: 800
+    learning_rate: 0.05092911283433821
+    num_leaves: 48
+    max_depth: 3
+    subsample: 0.9879639408647978
+    colsample_bytree: 0.9162213204002109
+    reg_lambda: 0.30803400529839686
+  catboost:
+    iterations: 800
+    learning_rate: 0.07045923396089553
+    depth: 4
+    l2_leaf_reg: 2.6641960893341508
+  mlp:
+    hidden_layer_sizes:
+    - 128
+    - 64
+    activation: relu
+    alpha: 0.001
+    learning_rate_init: 0.001
+    max_iter: 300
+    early_stopping: true
+model_selection:
+  selected: ridge
+  reason: Mejor MAE en CV temporal (55.1 vs 197+ de arboles). Lineal regularizado
+    generaliza mejor en niveles no estacionarios.
+  val_mae_cv: 55.080949205728
