@@ -13,7 +13,42 @@ con validación/CV → comprobar una vez con test → empaquetar → monitorizar
 
 ## 📈 Resultados principales
 
-### Métricas finales en TEST bloqueado (2023-01 → 2025-09, 684 días hábiles)
+### Verificación fuerte de generalización (fase 16b)
+
+Diagnóstico honesto con 4 pruebas (detalle en `notebooks/16_direccion_clasificacion.ipynb`):
+
+| Prueba | Resultado | Conclusión |
+|---|---|---|
+| Gap train/val/test (MAE) | train 14.7 · val 21.5 · test 204.7 | El gap train→test es **drift de mercado**, no overfitting severo (val gap pequeño) |
+| Learning curve (CV temporal) | val MAE 15→42→89→58→42 al crecer train | **No hay overfitting severo**: el val no empeora sistemáticamente con más datos |
+| Gap por familia | Ridge 23 · RF 264 · XGB 200 | Ridge es la familia con **menor overfitting** (por eso ganó) |
+| vs naive-persistencia | naive MAE=17.6 vs modelo 204.7 | **El modelo NO supera a "mañana = hoy"** en h=1 |
+
+**Conclusión honesta**: el R² alto en train (0.998) y test (0.757) refleja que el
+modelo sigue la **tendencia**, pero el cambio diario del oro es **ruido
+impredecible** (mercado eficiente). Para decisión de sube/baja, la regresión
+no es útil (dirección implícita 45%). **Por eso se añadió el clasificador de
+dirección** (ver siguiente sección).
+
+### Clasificador de dirección (sube/baja) — fase 16b
+
+Modelo de clasificación binaria (RandomForest calibrado) que predice
+P(gold(t+1) > gold(t)) reutilizando las mismas features y split:
+
+| Horizonte | CV AUC | Test AUC | Test ACC | P(sube) |
+|---|---|---|---|---|
+| h=1 | 0.528 | **0.555** | 0.557 | 0.537 |
+| h=5 | 0.532 | 0.511 | 0.586 | 0.573 |
+| h=21 | 0.571 | 0.535 | 0.689 | 0.677 |
+
+- **h=1 (desplegado): Test AUC=0.555, ACC=0.557, recall=0.834, PR-AUC=0.584**.
+- Señal **débil pero real** (AUC > 0.5), coherente con eficiencia de mercado.
+- La señal proviene de momentum (`gold_ret_lag1`, `gold_ret_roll63`) y riesgo
+  geopolítico (`geopolitical_risk`, `policy_uncertainty`).
+- **Uso recomendado**: inclinación leve (p.ej. para alertas), NO como señal de
+  trading automático. La probabilidad calibrada se sirve en `/predict_direction`.
+
+### Métricas de la regresión en TEST bloqueado (2023-01 → 2025-09, 684 días hábiles)
 
 | Modelo | MAE (USD/oz) | RMSE (USD/oz) | sMAPE | R² | Directional Acc. |
 |---|---|---|---|---|---|
@@ -21,11 +56,12 @@ con validación/CV → comprobar una vez con test → empaquetar → monitorizar
 | **Ridge (final)** | **204.36** | **241.81** | **8.28%** | **0.758** | 47.4% |
 | XGBoost | 199.7 (val) | 212.0 | 11.7% (val) | −3.3 | 51.2% |
 
-- **Reducción del MAE del 76.8%** frente al baseline naive.
+- **Reducción del MAE del 76.8%** frente al baseline naive del informe original
+  (último valor de train+val, 2022).
 - R² = 0.758: el modelo captura la tendencia y el nivel del oro.
-- La **Directional Accuracy ≈ 47-48%** (peor que 50%) indica que el signo del
-  movimiento diario es esencialmente impredecible con estos datos (eficiencia
-  de mercado): el modelo es útil para **nivel**, no para *timing* diario.
+- **Limitación documentada**: frente al naive-persistencia diario
+  (gold_spot(t), MAE=17.6) el modelo NO gana en h=1; su valor está en el
+  seguimiento de tendencia a medio plazo y como referencia de nivel.
 
 ### Degradación temporal (test, modelo congelado)
 
@@ -87,7 +123,8 @@ python -m src.features.build_features
 # 3) API REST
 uvicorn src.api.main:app --reload
 #    GET  /health
-#    POST /predict  {"date": "2025-08-14", "features": {...}}
+#    POST /predict           {"date": "2025-08-14", "features": {...}}
+#    POST /predict_direction  {"date": "2025-08-14", "features": {...}}  → P(sube)
 
 # 4) Predicción CLI
 python scripts/predict.py --date 2025-09-12
@@ -112,6 +149,7 @@ pytest tests/ -q
 | `11_13_baselines_modelado.ipynb` | 11-13. Baselines, modelado y CV |
 | `14_tuning.ipynb` | 14. Hyperparameter tuning (Optuna) |
 | `15_16_seleccion_entrenamiento.ipynb` | 15-16. Selección y entrenamiento final |
+| `16_direccion_clasificacion.ipynb` | **16b. Verificación de generalización + clasificación de dirección (sube/baja)** |
 | `17_test_final.ipynb` | 17. Test final bloqueado |
 | `18_errores_explicabilidad.ipynb` | 18. Errores, SHAP e incertidumbre |
 | `19_20_robustez_etica.ipynb` | 19-20. Robustez, ética y seguridad |

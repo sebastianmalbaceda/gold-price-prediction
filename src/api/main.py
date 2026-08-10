@@ -15,18 +15,22 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from src.config import get_config, path_from_root
+from src.models.classifier import load_classifier_artifacts
 from src.models.train_model import load_model_artifacts
 
 app = FastAPI(
     title="Gold Price Prediction API",
-    description="Predicción del precio spot del oro (USD/oz) a 1 día hábil.",
-    version="1.0.0",
+    description="Predicción del precio spot del oro (USD/oz) y su dirección (sube/baja).",
+    version="1.1.0",
 )
 
 # Artefactos cargados una sola vez (lazy al arrancar)
 _model = None
 _preprocessor = None
 _features: list[str] = []
+_clf = None
+_clf_pp = None
+_clf_features: list[str] = []
 
 
 def _ensure_loaded():
@@ -39,6 +43,18 @@ def _ensure_loaded():
             raise HTTPException(
                 status_code=503,
                 detail=f"Modelo no disponible: {e}. Ejecute primero el entrenamiento (fases 15-16).",
+            )
+
+
+def _ensure_clf_loaded():
+    global _clf, _clf_pp, _clf_features
+    if _clf is None:
+        try:
+            _clf, _clf_pp, _clf_features = load_classifier_artifacts()
+        except FileNotFoundError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Clasificador no disponible: {e}. Ejecute el notebook 16.",
             )
 
 
@@ -56,6 +72,14 @@ class PredictResponse(BaseModel):
     date: str
     horizon_days: int
     prediction_usd_per_oz: float
+    model_version: str
+
+
+class DirectionResponse(BaseModel):
+    date: str
+    horizon_days: int
+    probability_up: float
+    direction: str  # "up" | "down"
     model_version: str
 
 
@@ -101,5 +125,50 @@ def predict(req: PredictRequest):
         date=str(date.date()),
         horizon_days=1,
         prediction_usd_per_oz=round(pred, 2),
+        model_version=get_config()["model"]["version"],
+    )
+
+
+@app.post("/predict_direction", response_model=DirectionResponse)
+def predict_direction(req: PredictRequest):
+    """Predice la probabilidad de que el oro SUBE en t+1.
+
+    Usa el clasificador de dirección (RandomForest calibrado) con las
+    mismas features que la regresión. La señal es débil (AUC ~0.55):
+    el resultado debe interpretarse como una leve inclinación, no como
+    una certeza.
+    """
+    _ensure_clf_loaded()
+    try:
+        date = pd.Timestamp(req.date)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=422, detail="Fecha inválida (use YYYY-MM-DD)")
+
+    missing = [c for c in _clf_features if c not in req.features]
+    if missing:
+        raise HTTPException(status_code=422,
+                            detail=f"Faltan features: {missing[:10]}...")
+    extra = [c for c in req.features if c not in _clf_features]
+    if extra:
+        raise HTTPException(status_code=422,
+                            detail=f"Features no esperadas: {extra[:10]}...")
+
+    try:
+        row = [float(req.features[c]) for c in _clf_features]
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422,
+                            detail="Todas las features deben ser numéricas")
+    if not all(math.isfinite(v) for v in row):
+        raise HTTPException(status_code=422,
+                            detail="Las features deben ser finitas (sin NaN/Inf)")
+
+    X = np.asarray([row], dtype=np.float64)
+    X_scaled = _clf_pp.transform(X)
+    prob_up = float(_clf.predict_proba(X_scaled)[0][1])
+    return DirectionResponse(
+        date=str(date.date()),
+        horizon_days=1,
+        probability_up=round(prob_up, 4),
+        direction="up" if prob_up >= 0.5 else "down",
         model_version=get_config()["model"]["version"],
     )

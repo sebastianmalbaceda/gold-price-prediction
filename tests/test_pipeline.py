@@ -9,9 +9,10 @@ from fastapi.testclient import TestClient
 from src.api.main import app
 from src.data.load_data import clean_daily_series, load_raw
 from src.data.split import drop_warmup, temporal_split
-from src.evaluation.metrics import (directional_accuracy, mape,
-                                    regression_metrics, smape)
+from src.evaluation.metrics import (classification_metrics, directional_accuracy,
+                                    mape, regression_metrics, smape)
 from src.features.build_features import build_features, get_feature_columns, make_targets
+from src.models.classifier import make_direction_targets
 
 client = TestClient(app)
 
@@ -150,6 +151,37 @@ def test_get_feature_columns_excludes_targets():
     assert "gold_spot" not in cols
 
 
+# --- Fase 16b: clasificación de dirección ---
+def test_make_direction_targets():
+    df = _make_df(100)
+    cfg = {"features": {"target_lags": [1], "rolling_windows": [5],
+                        "exogenous_lags": [1], "calendar": True},
+           "target": {"horizons": [1]}}
+    feats = build_features(df, cfg, raw=None)
+    feats = make_targets(feats, [1])
+    out = make_direction_targets(feats, [1])
+    assert "dir_1" in out.columns
+    # dir_1 = 1 si target_1 > gold_spot
+    expected = (feats["target_1"] > feats["gold_spot"]).astype(int)
+    assert (out["dir_1"] == expected).all()
+
+
+def test_classification_metrics_perfect():
+    y = np.array([0, 0, 1, 1])
+    p = np.array([0.1, 0.2, 0.8, 0.9])
+    m = classification_metrics(y, p)
+    assert m["auc"] == 1.0
+    assert m["accuracy"] == 1.0
+    assert 0 <= m["brier"] <= 1
+
+
+def test_classification_metrics_single_class():
+    y = np.array([1, 1, 1])
+    p = np.array([0.9, 0.8, 0.7])
+    m = classification_metrics(y, p)
+    assert np.isnan(m["auc"])  # AUC no definido con una sola clase
+
+
 # --- Fase 2-3: limpieza ---
 def test_clean_daily_series_removes_weekends():
     cfg = {"data": {"start_date": "2000-01-01", "end_date": "2000-02-01",
@@ -186,4 +218,16 @@ def test_predict_invalid_date():
 def test_predict_extra_keys_rejected():
     r = client.post("/predict", json={"date": "2025-01-01",
                                       "features": {"a": 1.0, "extra": 2.0}})
+    assert r.status_code in (422, 500, 503)
+
+
+def test_predict_direction_invalid_schema():
+    r = client.post("/predict_direction",
+                    json={"date": "2025-01-01", "features": {}})
+    assert r.status_code in (422, 500, 503)
+
+
+def test_predict_direction_invalid_date():
+    r = client.post("/predict_direction",
+                    json={"date": "no-es-fecha", "features": {"a": 1.0}})
     assert r.status_code in (422, 500, 503)

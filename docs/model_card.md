@@ -1,18 +1,20 @@
-# Model Card — Gold Price Prediction (Ridge)
+# Model Card — Gold Price Prediction (Ridge + Clasificador de Dirección)
 
 ## Resumen
-Modelo de regresión para predecir el **precio spot del oro (USD/oz)** a 1 día hábil
-(horizontes 5 y 21 implementados en features). Entrenado con datos 2000-2022,
-evaluado en test 2023-2025.
+Dos modelos:
+1. **Regresión (Ridge)** para el **nivel** del precio spot del oro (USD/oz) a 1 día hábil.
+2. **Clasificación (RandomForest calibrado)** para la **dirección** (sube/baja) a 1 día hábil.
+
+Entrenados con datos 2000-2022, evaluados en test 2023-2025.
 
 ## Uso previsto
 - Referencia cuantitativa de nivel para analistas (sizing, stress testing, alertas).
+- Dirección como **inclinación leve** (AUC ≈ 0.55): alertas tempranas, no trading automático.
 - Investigación/educación en forecasting financiero.
 - Predicción batch/diaria vía API o CLI.
 
 ## Uso NO previsto
-- **Trading automático** o decisiones de compra/venta sin supervisión humana
-  (la directional accuracy ≈ 47-48% no supera el azar).
+- **Trading automático** o decisiones de compra/venta sin supervisión humana.
 - Horizontes > 21 días.
 - Predicción en regímenes sin precedentes (el modelo extrapola mal).
 
@@ -21,7 +23,7 @@ evaluado en test 2023-2025.
 - 60 features exógenas (tipos, FX, materias primas, índices, macro).
 - Fuente: compilación pública; sin datos personales.
 
-## Métricas (test bloqueado 2023-2025)
+## Métricas — Regresión (test bloqueado 2023-2025)
 
 | Métrica | Valor |
 |---|---|
@@ -32,18 +34,35 @@ evaluado en test 2023-2025.
 | DA | 47.4% |
 | vs naive | −76.8% MAE |
 
+**Limitación clave**: no supera al naive-persistencia diario (MAE 17.6); su
+valor está en el seguimiento de tendencia, no en el cambio diario.
+
+## Métricas — Clasificador de dirección (test bloqueado 2023-2025, h=1)
+
+| Métrica | Valor |
+|---|---|
+| AUC-ROC | **0.555** |
+| PR-AUC | 0.584 |
+| Accuracy | 0.557 |
+| Recall (sube) | 0.834 |
+| Precision (sube) | 0.558 |
+| F1 | 0.669 |
+| Brier | 0.247 |
+
+Señal **débil pero real** (AUC > 0.5). No apta para trading automático.
+
 ## Subgrupos / segmentos
-| Segmento | MAE |
+| Segmento | MAE regresión |
 |---|---|
 | 2023 | 86.6 |
 | 2024 | 204.8 |
 | 2025 | 392.6 |
 
 Degradación creciente: los segmentos recientes (rally 2024-25) están fuera de
-la distribución de entrenamiento.
+la distribución de entrenamiento (drift).
 
 ## Limitaciones
-1. Dirección diaria impredecible (DA ≈ azar).
+1. Cambio diario impredecible (mercado eficiente): dirección ≈ AUC 0.55.
 2. Drift de mercado: requiere reentrenamiento periódico.
 3. Intervalos de incertidumbre mal calibrados (cobertura P5-P95 ≈ 1%).
 4. Features macro publicadas con retraso (ffill).
@@ -60,4 +79,5 @@ la distribución de entrenamiento.
 - Propietario: equipo de datos (proyecto educativo).
 
 ## Versiones
-- v1.0.0 (2025): Ridge α=0.0022, 85 features, RobustScaler, h=1.
+- v1.0.0 (2025): Ridge α=0.0022, 110 features, RobustScaler, h=1.
+- v1.1.0 (2025): + clasificador de dirección (RandomForest calibrado), endpoint `/predict_direction`.

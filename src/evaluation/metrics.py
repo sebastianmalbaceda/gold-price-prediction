@@ -73,3 +73,45 @@ def metrics_table(rows: list[dict]) -> pd.DataFrame:
     present = [c for c in metric_cols if c in df.columns]
     extra = [c for c in df.columns if c not in metric_cols]
     return df[extra + present]
+
+
+def classification_metrics(y_true: np.ndarray, y_prob: np.ndarray,
+                           threshold: float = 0.5) -> dict[str, float]:
+    """Métricas de clasificación binaria para el predictor de dirección.
+
+    y_true: etiquetas reales (0/1).
+    y_prob: probabilidad predicha de la clase positiva (sube).
+    threshold: umbral de decisión (por defecto 0.5).
+
+    Devuelve AUC-ROC, PR-AUC, accuracy, precision, recall, F1 y Brier.
+    En problemas de dirección de mercado, AUC es la métrica primaria
+    honesta (el accuracy depende del umbral y del balance de clases).
+    """
+    from sklearn.metrics import (accuracy_score, average_precision_score,
+                                 brier_score_loss, f1_score, precision_score,
+                                 recall_score, roc_auc_score)
+
+    y_true = np.asarray(y_true)
+    y_prob = np.asarray(y_prob, dtype=float)
+    y_pred = (y_prob >= threshold).astype(int)
+
+    # AUC solo si hay ambas clases
+    if len(np.unique(y_true)) < 2:
+        auc = float("nan")
+        pr_auc = float("nan")
+    else:
+        auc = float(roc_auc_score(y_true, y_prob))
+        pr_auc = float(average_precision_score(y_true, y_prob))
+
+    return {
+        "n": int(len(y_true)),
+        "positive_rate": float(y_true.mean()),
+        "auc": auc,
+        "pr_auc": pr_auc,
+        "accuracy": float(accuracy_score(y_true, y_pred)),
+        "precision": float(precision_score(y_true, y_pred, zero_division=0)),
+        "recall": float(recall_score(y_true, y_pred, zero_division=0)),
+        "f1": float(f1_score(y_true, y_pred, zero_division=0)),
+        "brier": float(brier_score_loss(y_true, y_prob)),
+        "threshold": float(threshold),
+    }

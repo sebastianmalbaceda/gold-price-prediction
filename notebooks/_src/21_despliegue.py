@@ -114,6 +114,12 @@ try:
     print("\nPOST /predict ->", resp.status_code)
     print(json.dumps(resp.json(), indent=2, default=str))
 
+    # --- Prueba de predicción de dirección (fase 16b) ---
+    resp_dir = requests.post(f"http://127.0.0.1:{PORT}/predict_direction",
+                             json=payload, timeout=10)
+    print("\nPOST /predict_direction ->", resp_dir.status_code)
+    print(json.dumps(resp_dir.json(), indent=2, default=str))
+
     # --- Pruebas de validación de inputs ---
     bad = {"date": "2025-01-01", "features": {"inexistente": 1.0}}
     resp = requests.post(f"http://127.0.0.1:{PORT}/predict", json=bad, timeout=10)

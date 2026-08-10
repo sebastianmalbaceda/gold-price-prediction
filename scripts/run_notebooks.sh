@@ -23,8 +23,9 @@ else
     for nb in 01_problema_y_diseno 02_datos_y_auditoria 04_eda \
               05_target_y_metricas 07_particion 08_10_preprocessing_features \
               11_13_baselines_modelado 14_tuning 15_16_seleccion_entrenamiento \
-              17_test_final 18_errores_explicabilidad 19_20_robustez_etica \
-              21_despliegue 22_documentacion 23_monitorizacion; do
+              16_direccion_clasificacion 17_test_final 18_errores_explicabilidad \
+              19_20_robustez_etica 21_despliegue 22_documentacion \
+              23_monitorizacion; do
         run_one "$nb"
     done
 fi

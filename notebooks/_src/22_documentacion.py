@@ -44,6 +44,13 @@ for d in docs:
     size = p.stat().st_size if p.exists() else 0
     print(f"{'OK ' if p.exists() and size > 0 else 'FALTA '} {d} ({size} bytes)")
 
+# Artefactos del clasificador de dirección (fase 16b)
+for a in ["direction_classifier.joblib", "direction_preprocessor.joblib",
+          "direction_feature_list.json", "direction_metrics.json"]:
+    p = Path(ROOT) / "models" / a
+    size = p.stat().st_size if p.exists() else 0
+    print(f"{'OK ' if p.exists() and size > 0 else 'FALTA '} models/{a} ({size} bytes)")
+
 # %%
 """Resumen de resultados finales registrados.
 

@@ -92,6 +92,47 @@ En test, el naive usa el último valor de train+val (2022) → MAE 879.
 | Directional Accuracy | 47.4% |
 | vs Naive | **−76.8% MAE** |
 
+## 9b. Verificación fuerte de generalización (fase 16b)
+
+**¿Overfitting o underfitting?** Diagnóstico con 4 pruebas:
+
+1. **Gap train/val/test**: MAE train=14.7, val=21.5, test=204.7. El gap
+train→val es pequeño (14.7→21.5) → **sin overfitting severo**. El salto a
+test (204.7) se explica por **drift de régimen** (2023-25: rally histórico).
+2. **Learning curve (CV temporal)**: el MAE de validación NO empeora
+sistemáticamente al crecer train (15→42→89→58→42) → **no hay overfitting**;
+el modelo se beneficia de más datos.
+3. **Gap por familia**: Ridge gap=23, RF gap=264, XGB gap=200 → Ridge es la
+familia con **menor overfitting**, coherente con su victoria en selección.
+4. **vs naive-persistencia** (`gold_spot(t)`): naive MAE=17.6 vs modelo
+204.7 en test → **el modelo NO supera a "mañana = hoy" en h=1**.
+
+**Conclusión técnica**: el R² alto (0.998 train / 0.758 test) mide el
+seguimiento de la **tendencia**, no la precisión del cambio diario. En un
+mercado eficiente, el cambio a 1 día es ruido: ningún modelo con datos
+públicos lo supera de forma consistente. El modelo de regresión es útil
+como **referencia de nivel/tendencia**, no para timing.
+
+## 9c. Clasificador de dirección (sube/baja) — fase 16b
+
+Modelo binario: `y_dir = 1 si gold(t+h) > gold(t)`, con las mismas features
+y split. RandomForest calibrado (isotónico, CV interna).
+
+| Horizonte | CV AUC | Test AUC | Test ACC | P(sube) test |
+|---|---|---|---|---|
+| h=1 | 0.528 | **0.555** | 0.557 | 0.537 |
+| h=5 | 0.532 | 0.511 | 0.586 | 0.573 |
+| h=21 | 0.571 | 0.535 | 0.689 | 0.677 |
+
+- h=1 desplegado: **AUC=0.555, ACC=0.557, recall=0.834, PR-AUC=0.584, Brier=0.247**.
+- Señal débil pero real (AUC > 0.5 de forma consistente en CV y test).
+- Features más informativas: momentum (`gold_ret_lag1`, `gold_ret_roll63`)
+  y riesgo (`geopolitical_risk`, `policy_uncertainty`, `usdinr_exchange_ret_lag1`).
+- **Interpretación**: inclinación leve (para alertas/sizing marginal), NO
+  señal de trading automático. La probabilidad está calibrada (Brier 0.247
+  cerca del óptimo para P≈0.54).
+- Artefactos: `models/direction_classifier.joblib`, endpoint `/predict_direction`.
+
 ## 10. Error analysis y explicabilidad (fase 18)
 
 - **Errores crecientes en el tiempo:** 2023: MAE 87 → 2024: 205 → 2025: 393.
