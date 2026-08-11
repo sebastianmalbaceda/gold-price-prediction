@@ -69,6 +69,18 @@ CV AUC ≈ 0.516 (inestable); t-test retornos p=0.25 (no significativo).
 **Conclusión**: señal débil y no explotable de forma fiable. El modelo sirve
 como indicador de riesgo/inclinación, no como estrategia de trading.
 
+## Robustez (fase 17c)
+
+- **Overfitting**: el RF original (depth=8) sobreajustaba (train AUC 0.91 vs
+test 0.56). Con regularización (depth=4, leaf=20) el gap baja a **0.126**
+sin perder test AUC (0.569).
+- **Underfitting**: no (más datos mejoran; el modelo captura la señal).
+- **Walk-forward 2019-2025**: AUC medio 0.539 ± 0.057; la estrategia gana a
+buy&hold solo en 1/7 años (2025).
+- **Por régimen**: alcista AUC 0.548 · bajista 0.438 · lateral 0.484.
+- **Conclusión**: lo mejor posible con estos datos = señal modesta (AUC ~0.54).
+Uso práctico: indicador de riesgo (reducir exposición si P<0.5, alertas).
+
 ## Subgrupos / segmentos
 | Segmento | MAE regresión |
 |---|---|

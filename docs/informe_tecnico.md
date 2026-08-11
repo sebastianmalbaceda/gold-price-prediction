@@ -165,6 +165,40 @@ backtest no supera a comprar y mantener. La rentabilidad a largo plazo de
 una estrategia de tendencia con estos datos no está demostrada; el valor
 real está en la gestión de riesgo (alertas, sizing), no en el timing.
 
+## 9e. Verificación de robustez (fase 17c)
+
+**¿Overfitting?** El modelo original (RF depth=8) sobreajustaba: train AUC
+0.91 vs test 0.56 (gap 0.35). El RF profundo aún más (gap 0.43). Con
+regularización fuerte (depth=4, leaf=20) el gap baja a **0.126** manteniendo
+test AUC=0.569. La learning curve confirma que el gap se reduce al crecer
+train (0.29→0.19), típico de overfitting controlable con regularización.
+
+**¿Underfitting?** No: submuestrear train empeora el test AUC (0.537 con
+30% vs 0.557 con 100%). El modelo captura la señal disponible.
+
+**Walk-forward 2019-2025** (reentrenamiento anual, ventana 5 años):
+
+| Año eval | AUC | Estrategia | Buy&Hold |
+|---|---|---|---|
+| 2019 | 0.550 | +4.1% | +18.3% |
+| 2020 | 0.522 | +2.6% | +25.1% |
+| 2021 | 0.501 | −8.3% | −5.1% |
+| 2022 | 0.482 | −7.7% | +1.3% |
+| 2023 | 0.514 | +4.5% | +13.2% |
+| 2024 | 0.545 | +11.7% | +27.1% |
+| 2025 | 0.656 | +31.6% | +27.1% |
+
+- AUC medio **0.539 ± 0.057**; solo 2025 supera claramente 0.55.
+- La estrategia gana a buy&hold solo en 2025 (mercado con tendencia fuerte).
+- Por régimen: alcista AUC=0.548, bajista 0.438, lateral 0.484 → la señal
+de momentum es condicional al régimen.
+
+**Conclusión de robustez**: el modelo regularizado es **lo mejor posible con
+estos datos** (sin memorizar, sin ser trivial): señal real pero débil
+(AUC ~0.54). Su uso práctico honesto es como **indicador de riesgo**
+(reducir exposición cuando P<0.5, alertas), no como fuente de rentabilidad
+superior a comprar y mantener.
+
 ## 10. Error analysis y explicabilidad (fase 18)
 
 - **Errores crecientes en el tiempo:** 2023: MAE 87 → 2024: 205 → 2025: 393.

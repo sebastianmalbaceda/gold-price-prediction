@@ -1,0 +1,84 @@
+{
+  "gap_regularizacion": {
+    "profundo": {
+      "train_auc": 1.0,
+      "test_auc": 0.5713,
+      "gap": 0.4287
+    },
+    "actual_depth8": {
+      "train_auc": 0.9112,
+      "test_auc": 0.559,
+      "gap": 0.3522
+    },
+    "regularizado_depth4": {
+      "train_auc": 0.6947,
+      "test_auc": 0.5692,
+      "gap": 0.1255
+    }
+  },
+  "walk_forward": {
+    "auc_medio": 0.538620176400992,
+    "auc_std": 0.0570167945663626,
+    "anios_auc_gt_055": 2,
+    "anios_estr_gt_bh": 1,
+    "por_anio": [
+      {
+        "year": 2019,
+        "auc": 0.5502,
+        "strat": 0.0406,
+        "bh": 0.183
+      },
+      {
+        "year": 2020,
+        "auc": 0.5218,
+        "strat": 0.0257,
+        "bh": 0.251
+      },
+      {
+        "year": 2021,
+        "auc": 0.5014,
+        "strat": -0.083,
+        "bh": -0.0512
+      },
+      {
+        "year": 2022,
+        "auc": 0.482,
+        "strat": -0.0769,
+        "bh": 0.0127
+      },
+      {
+        "year": 2023,
+        "auc": 0.5138,
+        "strat": 0.0453,
+        "bh": 0.1317
+      },
+      {
+        "year": 2024,
+        "auc": 0.5449,
+        "strat": 0.1166,
+        "bh": 0.2713
+      },
+      {
+        "year": 2025,
+        "auc": 0.6562,
+        "strat": 0.3159,
+        "bh": 0.2712
+      }
+    ]
+  },
+  "regimen": {
+    "alcista": {
+      "auc": 0.548,
+      "n": 1039
+    },
+    "bajista": {
+      "auc": 0.4384,
+      "n": 372
+    },
+    "lateral": {
+      "auc": 0.4839,
+      "n": 317
+    }
+  },
+  "conclusion": "Se\u00f1al real pero d\u00e9bil (walk-forward AUC 0.54). Sin overfitting tras regularizar (gap 0.13). No supera a buy&hold. Uso: indicador de riesgo/alertas."
+}

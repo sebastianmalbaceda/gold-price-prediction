@@ -94,6 +94,38 @@ la precisión (59-67%) a costa de operar menos.
    marginal, gestión de exposición), NO como estrategia de trading. La
    regresión de niveles sirve como referencia de tendencia a medio plazo.
 
+### Verificación de robustez: overfitting/underfitting (fase 17c)
+
+Diagnóstico completo en `notebooks/17c_robustez_direccion.ipynb`:
+
+**¿Overfitting?** El modelo original (RF depth=8) **SÍ sobreajustaba**:
+
+| Modelo | Train AUC | Test AUC | Gap |
+|---|---|---|---|
+| RF profundo (depth=None) | 1.000 | 0.571 | **0.429** |
+| RF original (depth=8) | 0.911 | 0.559 | **0.352** |
+| **RF regularizado (depth=4, leaf=20)** | **0.695** | **0.569** | **0.126** |
+
+La regularización reduce el overfitting **sin perder test AUC** (0.569).
+La learning curve muestra que el gap se reduce al crecer train (0.29→0.19).
+
+**¿Underfitting? NO.** Más datos mejoran el test AUC (0.537 con 30% de train
+→ 0.557 con 100%). El modelo no es demasiado simple.
+
+**Generalización real (walk-forward 2019-2025, reentrenando cada año):**
+
+- AUC medio: **0.539 ± 0.057** (solo 2/7 años superan 0.55).
+- La estrategia gana a buy&hold en **1/7 años**; estrategia media +5.5%/año
+  vs buy&hold +15.3%/año.
+- Por régimen: alcista AUC=0.548 · bajista AUC=0.438 · lateral AUC=0.484.
+  El modelo funciona mejor con tendencia alcista (momentum).
+
+**Conclusión de robustez**: la señal es **real pero débil** (AUC ~0.54 en
+walk-forward). El modelo regularizado no memoriza ni es demasiado simple:
+es **lo mejor posible con estos datos**, y lo mejor posible es una señal
+modesta. Uso práctico recomendado: **indicador de riesgo** (reducir
+exposición cuando P<0.5, alertas), no estrategia de trading.
+
 ### Métricas de la regresión en TEST bloqueado (2023-01 → 2025-09, 684 días hábiles)
 
 | Modelo | MAE (USD/oz) | RMSE (USD/oz) | sMAPE | R² | Directional Acc. |
@@ -197,6 +229,7 @@ pytest tests/ -q
 | `15_16_seleccion_entrenamiento.ipynb` | 15-16. Selección y entrenamiento final |
 | `16_direccion_clasificacion.ipynb` | **16b. Verificación de generalización + clasificación de dirección (sube/baja)** |
 | `17b_acierto_y_backtest.ipynb` | **17b. Acierto por clase, backtest de rentabilidad y significancia estadística** |
+| `17c_robustez_direccion.ipynb` | **17c. Verificación de robustez (overfitting/underfitting), walk-forward y régimen** |
 | `17_test_final.ipynb` | 17. Test final bloqueado |
 | `18_errores_explicabilidad.ipynb` | 18. Errores, SHAP e incertidumbre |
 | `19_20_robustez_etica.ipynb` | 19-20. Robustez, ética y seguridad |
