@@ -3,6 +3,7 @@
 Para forecasting: orden temporal estricto, nunca datos aleatorios.
 Train 2000-2019 | Val 2020-2022 | Test 2023-2025 (configurado en config.yaml).
 """
+
 from __future__ import annotations
 
 import pandas as pd
@@ -18,9 +19,11 @@ def temporal_split(df: pd.DataFrame, cfg: dict | None = None) -> dict[str, pd.Da
     train = df[(df["date"] >= s["train"][0]) & (df["date"] <= s["train"][1])]
     val = df[(df["date"] >= s["val"][0]) & (df["date"] <= s["val"][1])]
     test = df[(df["date"] >= s["test"][0]) & (df["date"] <= s["test"][1])]
-    return {"train": train.reset_index(drop=True),
-            "val": val.reset_index(drop=True),
-            "test": test.reset_index(drop=True)}
+    return {
+        "train": train.reset_index(drop=True),
+        "val": val.reset_index(drop=True),
+        "test": test.reset_index(drop=True),
+    }
 
 
 def get_temporal_splitter(cfg: dict | None = None) -> TimeSeriesSplit:

@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "Si utilizas este software en una publicación, por favor cítalo de la siguiente manera."
+title: "Gold Price Prediction"
+abstract: >-
+  Predicción del precio spot del oro (USD/oz) a 1, 5 y 21 días hábiles mediante
+  regresión de niveles, clasificación de dirección (sube/baja) y gestión de
+  riesgo por volatilidad. Serie temporal financiera 2000-2025 con más de 60
+  variables exógenas, validación walk-forward y backtest con costes.
+authors:
+  - family-names: "Malbaceda Leyva"
+    given-names: "Sebastián"
+    email: "sebastian.malbaceda.leyva@gmail.com"
+    orcid: ""
+keywords:
+  - gold price
+  - forecasting
+  - time series
+  - machine learning
+  - finance
+  - volatility
+license: MIT
+date-released: "2025-08-11"
+version: "1.0.0"
+repository-code: "https://github.com/sebastianmalbaceda/gold-price-prediction-v2"

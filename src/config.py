@@ -1,4 +1,5 @@
 """Configuración central del proyecto: carga YAML y rutas raíz."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,17 +22,20 @@ def _resolve_paths(cfg: dict) -> dict:
     import copy
 
     cfg = copy.deepcopy(cfg)
-    root = str(PROJECT_ROOT)
 
     # data.*
-    for key in ("raw_path", "interim_path", "processed_dir",
-                "train_path", "val_path", "test_path"):
+    for key in ("raw_path", "interim_path", "processed_dir", "train_path", "val_path", "test_path"):
         if key in cfg.get("data", {}):
             cfg["data"][key] = str(PROJECT_ROOT / cfg["data"][key])
 
     # model.*
-    for key in ("models_dir", "final_model_path", "preprocessor_path",
-                "feature_list_path", "metrics_path"):
+    for key in (
+        "models_dir",
+        "final_model_path",
+        "preprocessor_path",
+        "feature_list_path",
+        "metrics_path",
+    ):
         if key in cfg.get("model", {}):
             cfg["model"][key] = str(PROJECT_ROOT / cfg["model"][key])
 

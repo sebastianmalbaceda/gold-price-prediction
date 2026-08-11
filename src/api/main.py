@@ -5,6 +5,7 @@ Sirve predicciones del precio spot del oro a h=1 día hábil.
 Ejecución:
     uvicorn src.api.main:app --reload
 """
+
 from __future__ import annotations
 
 import math
@@ -42,7 +43,9 @@ def _ensure_loaded():
         except FileNotFoundError as e:
             raise HTTPException(
                 status_code=503,
-                detail=f"Modelo no disponible: {e}. Ejecute primero el entrenamiento (fases 15-16).",
+                detail=(
+                    "Modelo no disponible: " f"{e}. Ejecute primero el entrenamiento (fases 15-16)."
+                ),
             )
 
 
@@ -64,6 +67,7 @@ class PredictRequest(BaseModel):
     Las features son exactamente las usadas en entrenamiento
     (ver models/feature_list.json).
     """
+
     date: str = Field(..., description="Fecha (YYYY-MM-DD) del momento de predicción")
     features: dict[str, float] = Field(..., description="Valores de las features en t")
 
@@ -99,24 +103,20 @@ def predict(req: PredictRequest):
     # Validación del esquema: deben venir EXACTAMENTE las features del modelo
     missing = [c for c in _features if c not in req.features]
     if missing:
-        raise HTTPException(status_code=422,
-                            detail=f"Faltan features: {missing[:10]}...")
+        raise HTTPException(status_code=422, detail=f"Faltan features: {missing[:10]}...")
     extra = [c for c in req.features if c not in _features]
     if extra:
-        raise HTTPException(status_code=422,
-                            detail=f"Features no esperadas: {extra[:10]}...")
+        raise HTTPException(status_code=422, detail=f"Features no esperadas: {extra[:10]}...")
 
     # Construir vector en el orden exacto de entrenamiento
     try:
         row = [float(req.features[c]) for c in _features]
     except (TypeError, ValueError):
-        raise HTTPException(status_code=422,
-                            detail="Todas las features deben ser numéricas")
+        raise HTTPException(status_code=422, detail="Todas las features deben ser numéricas")
 
     # Rechazar NaN/Inf (el modelo no los acepta y no son datos válidos)
     if not all(math.isfinite(v) for v in row):
-        raise HTTPException(status_code=422,
-                            detail="Las features deben ser finitas (sin NaN/Inf)")
+        raise HTTPException(status_code=422, detail="Las features deben ser finitas (sin NaN/Inf)")
 
     X = np.asarray([row], dtype=np.float64)
     X_scaled = _preprocessor.transform(X)
@@ -146,21 +146,17 @@ def predict_direction(req: PredictRequest):
 
     missing = [c for c in _clf_features if c not in req.features]
     if missing:
-        raise HTTPException(status_code=422,
-                            detail=f"Faltan features: {missing[:10]}...")
+        raise HTTPException(status_code=422, detail=f"Faltan features: {missing[:10]}...")
     extra = [c for c in req.features if c not in _clf_features]
     if extra:
-        raise HTTPException(status_code=422,
-                            detail=f"Features no esperadas: {extra[:10]}...")
+        raise HTTPException(status_code=422, detail=f"Features no esperadas: {extra[:10]}...")
 
     try:
         row = [float(req.features[c]) for c in _clf_features]
     except (TypeError, ValueError):
-        raise HTTPException(status_code=422,
-                            detail="Todas las features deben ser numéricas")
+        raise HTTPException(status_code=422, detail="Todas las features deben ser numéricas")
     if not all(math.isfinite(v) for v in row):
-        raise HTTPException(status_code=422,
-                            detail="Las features deben ser finitas (sin NaN/Inf)")
+        raise HTTPException(status_code=422, detail="Las features deben ser finitas (sin NaN/Inf)")
 
     X = np.asarray([row], dtype=np.float64)
     X_scaled = _clf_pp.transform(X)

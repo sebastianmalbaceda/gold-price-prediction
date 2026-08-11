@@ -1,4 +1,5 @@
 """Carga de datos (fase 2-3): lectura, limpieza base y guardado en interim/."""
+
 from __future__ import annotations
 
 import pandas as pd
@@ -29,7 +30,7 @@ def clean_daily_series(df: pd.DataFrame, cfg: dict | None = None) -> pd.DataFram
     start, end = pd.Timestamp(d["start_date"]), pd.Timestamp(d["end_date"])
 
     df = df[(df["date"] >= start) & (df["date"] <= end)].copy()
-    df = df[df["date"].dt.dayofweek < 5].copy()          # sin fines de semana
+    df = df[df["date"].dt.dayofweek < 5].copy()  # sin fines de semana
     df = df.reset_index(drop=True)
 
     # Features excluidas por cobertura (ver config)

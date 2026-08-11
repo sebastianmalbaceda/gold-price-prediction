@@ -1,4 +1,4 @@
-# Guía Metodológica — Proyectos de Machine Learning
+# Guía Metodológica - Proyectos de Machine Learning
 
 Documento de referencia que define el **proceso completo y ordenado** para el
 desarrollo de proyectos de machine learning aplicado. No todas las fases
@@ -6,8 +6,8 @@ tendrán la misma profundidad en cada caso, pero deben considerarse siempre;
 las partes entre paréntesis dependen del tipo de problema: tabular, visión,
 NLP, forecasting, recomendación, etc.
 
-**Regla central:** *definir → auditar → dividir → aprender solo con train →
-seleccionar con validación/CV → comprobar una vez con test → empaquetar →
+**Regla central:** *definir -> auditar -> dividir -> aprender solo con train ->
+seleccionar con validación/CV -> comprobar una vez con test -> empaquetar ->
 monitorizar*. El test nunca debe influir en el preprocesamiento, la selección
 de variables, los hiperparámetros o la elección de modelo.
 
@@ -644,11 +644,11 @@ Siempre deben existir antes de utilizar modelos complejos.
 
 ```text
 Baseline
-→ modelo simple y explicable
-→ modelo no lineal
-→ ensemble/boosting
-→ deep learning
-→ transferencia/fine-tuning
+-> modelo simple y explicable
+-> modelo no lineal
+-> ensemble/boosting
+-> deep learning
+-> transferencia/fine-tuning
 ```
 
 
@@ -854,11 +854,11 @@ Calidad + estabilidad + coste + rapidez
 
 ```text
 Decisiones congeladas
-→ cargar test intacto
-→ aplicar transformaciones ya aprendidas
-→ inferir
-→ calcular métricas finales
-→ documentar
+-> cargar test intacto
+-> aplicar transformaciones ya aprendidas
+-> inferir
+-> calcular métricas finales
+-> documentar
 ```
 
 
@@ -1021,13 +1021,13 @@ Estas cuestiones se revisan desde el inicio, no solamente al final.
 
 ```text
 Input crudo
-→ validación de esquema
-→ preprocessing entrenado
-→ feature engineering
-→ feature selection
-→ modelo
-→ umbral/postprocesamiento
-→ respuesta
+-> validación de esquema
+-> preprocessing entrenado
+-> feature engineering
+-> feature selection
+-> modelo
+-> umbral/postprocesamiento
+-> respuesta
 ```
 
 El sistema de inferencia debe usar exactamente el preprocessing entrenado; recrearlo manualmente de forma “similar” causa divergencias entre entrenamiento y producción. [^4](https://developers.google.com/machine-learning/guides/rules-of-ml)

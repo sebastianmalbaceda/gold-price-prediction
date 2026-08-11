@@ -1,4 +1,5 @@
 """Métricas de evaluación para regresión/forecasting (fase 6)."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -41,8 +42,9 @@ def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.mean(np.sign(change_true) == np.sign(change_pred)) * 100)
 
 
-def regression_metrics(y_true: np.ndarray, y_pred: np.ndarray,
-                       horizon: int = 1) -> dict[str, float]:
+def regression_metrics(
+    y_true: np.ndarray, y_pred: np.ndarray, horizon: int = 1
+) -> dict[str, float]:
     """Conjunto completo de métricas de regresión/forecasting."""
     from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
@@ -68,15 +70,15 @@ def metrics_table(rows: list[dict]) -> pd.DataFrame:
     estándar primero.
     """
     df = pd.DataFrame(rows)
-    metric_cols = ["horizon", "mae", "rmse", "r2", "smape", "mape",
-                   "directional_accuracy", "n"]
+    metric_cols = ["horizon", "mae", "rmse", "r2", "smape", "mape", "directional_accuracy", "n"]
     present = [c for c in metric_cols if c in df.columns]
     extra = [c for c in df.columns if c not in metric_cols]
     return df[extra + present]
 
 
-def classification_metrics(y_true: np.ndarray, y_prob: np.ndarray,
-                           threshold: float = 0.5) -> dict[str, float]:
+def classification_metrics(
+    y_true: np.ndarray, y_prob: np.ndarray, threshold: float = 0.5
+) -> dict[str, float]:
     """Métricas de clasificación binaria para el predictor de dirección.
 
     y_true: etiquetas reales (0/1).
@@ -87,9 +89,15 @@ def classification_metrics(y_true: np.ndarray, y_prob: np.ndarray,
     En problemas de dirección de mercado, AUC es la métrica primaria
     honesta (el accuracy depende del umbral y del balance de clases).
     """
-    from sklearn.metrics import (accuracy_score, average_precision_score,
-                                 brier_score_loss, f1_score, precision_score,
-                                 recall_score, roc_auc_score)
+    from sklearn.metrics import (
+        accuracy_score,
+        average_precision_score,
+        brier_score_loss,
+        f1_score,
+        precision_score,
+        recall_score,
+        roc_auc_score,
+    )
 
     y_true = np.asarray(y_true)
     y_prob = np.asarray(y_prob, dtype=float)

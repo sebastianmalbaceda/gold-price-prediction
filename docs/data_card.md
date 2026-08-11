@@ -1,4 +1,4 @@
-# Data Card — Gold Price Prediction
+# Data Card - Gold Price Prediction
 
 ## Origen y licencia
 - **Fuente:** `data/raw/gold-price-prediction-dataset.csv` (compilación pública de
@@ -6,14 +6,14 @@
 - **Licencia:** sin restricciones conocidas para uso académico; no redistribuir
   con fines comerciales sin verificar. El dataset **no contiene datos personales**.
 - **Frecuencia:** diaria (incluye fines de semana sin cotización).
-- **Periodo:** 1901-06-30 → 2025-09-14 (45,368 filas × 61 columnas).
+- **Periodo:** 1901-06-30 -> 2025-09-14 (45,368 filas × 61 columnas).
 
 ## Diccionario de datos (variables principales)
 
 ### Target
 | Nombre | Descripción | Tipo | Unidad | Nulos (2000+) | Rango | Disponibilidad | Leakage | Tratamiento |
 |---|---|---|---|---|---|---|---|---|
-| `gold_spot` | Precio spot del oro | float | USD/oz | 0.2% | 263–3,430 | diaria (días hábiles) | — | target + lags |
+| `gold_spot` | Precio spot del oro | float | USD/oz | 0.2% | 263–3,430 | diaria (días hábiles) | - | target + lags |
 
 ### Exógenas usadas (35 en modelo)
 | Nombre | Descripción | Tipo | Nulos | Rango | Leakage | Tratamiento |
@@ -33,7 +33,7 @@
 | `etf_gold_flows`, `gdx_index` | Flujos ETF oro / mineras | float | <10% | varios | no | lag1 + retorno |
 | `us_cpi`, `us_unemployment`, `fed_funds`* | Macro USA | float | **3%** | varios | publicación retrasada | lag1 (ffill) |
 
-\* = disponible en el dataset pero **excluida del modelo** por cobertura <50% (ver `config.yaml → excluded_features`).
+\* = disponible en el dataset pero **excluida del modelo** por cobertura <50% (ver `config.yaml -> excluded_features`).
 
 ### Features excluidas (26) por cobertura insuficiente (<50% en 2000+)
 `us_fiscal_deficit`, `us_gdp`, `google_trends_gold_element/word`, `copper_spot`,

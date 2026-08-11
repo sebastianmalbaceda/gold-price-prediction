@@ -1,4 +1,5 @@
 """Utilidades comunes: semillas, guardado de figuras y JSON."""
+
 from __future__ import annotations
 
 import json
@@ -39,22 +40,24 @@ def set_publication_style() -> None:
     """
     import matplotlib as mpl
 
-    mpl.rcParams.update({
-        "font.family": "serif",
-        "font.size": 11,
-        "axes.titlesize": 13,
-        "axes.labelsize": 12,
-        "legend.fontsize": 10,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
-        "axes.grid": True,
-        "grid.alpha": 0.3,
-        "grid.linestyle": "--",
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-        "figure.dpi": 150,
-        "savefig.dpi": 150,
-    })
+    mpl.rcParams.update(
+        {
+            "font.family": "serif",
+            "font.size": 11,
+            "axes.titlesize": 13,
+            "axes.labelsize": 12,
+            "legend.fontsize": 10,
+            "xtick.labelsize": 10,
+            "ytick.labelsize": 10,
+            "axes.grid": True,
+            "grid.alpha": 0.3,
+            "grid.linestyle": "--",
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "figure.dpi": 150,
+            "savefig.dpi": 150,
+        }
+    )
 
 
 def save_json(obj, name: str, subdir: str = "") -> Path:

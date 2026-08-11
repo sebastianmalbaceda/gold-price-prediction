@@ -6,6 +6,7 @@ entrenamiento (KS test) y emite un JSON con alertas.
 Uso:
     python scripts/monitor_drift.py --window 60
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,17 +16,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import pandas as pd
-from scipy.stats import ks_2samp
+import pandas as pd  # noqa: E402
+from scipy.stats import ks_2samp  # noqa: E402
 
-from src.config import get_config
-from src.data.split import drop_warmup, temporal_split
+from src.config import get_config  # noqa: E402
+from src.data.split import drop_warmup, temporal_split  # noqa: E402
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--window", type=int, default=60,
-                    help="Últimos N días a comparar contra train")
+    ap.add_argument("--window", type=int, default=60, help="Últimos N días a comparar contra train")
     args = ap.parse_args()
 
     cfg = get_config()
@@ -46,14 +46,14 @@ def main():
             continue
         stat, p = ks_2samp(a, b)
         if p < 0.01:
-            alerts.append({"feature": c,
-                           "ks": round(float(stat), 3),
-                           "p": round(float(p), 4)})
+            alerts.append({"feature": c, "ks": round(float(stat), 3), "p": round(float(p), 4)})
 
-    out = {"window_days": int(args.window),
-           "n_features_checked": len(sel_cols),
-           "n_drift_alerts": len(alerts),
-           "alerts": alerts}
+    out = {
+        "window_days": int(args.window),
+        "n_features_checked": len(sel_cols),
+        "n_drift_alerts": len(alerts),
+        "alerts": alerts,
+    }
     with open("reports/drift_report.json", "w") as f:
         json.dump(out, f, indent=2, default=float)
     print(f"Features con drift: {len(alerts)}/{len(sel_cols)}")

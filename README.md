@@ -1,4 +1,4 @@
-# Gold Price Prediction — Serie Temporal Financiera
+# Gold Price Prediction - Serie Temporal Financiera
 
 Predicción del **precio spot del oro (USD/oz)** a 1, 5 y 21 días hábiles mediante
 aprendizaje supervisado de regresión con 60 variables exógenas financieras
@@ -6,12 +6,12 @@ aprendizaje supervisado de regresión con 60 variables exógenas financieras
 
 Proyecto completo de ML siguiendo el índice maestro
 [`docs/methodology-guide.md`](docs/methodology-guide.md):
-las 23 fases (definir → auditar → dividir → aprender solo con train → seleccionar
-con validación/CV → comprobar una vez con test → empaquetar → monitorizar).
+las 23 fases (definir -> auditar -> dividir -> aprender solo con train -> seleccionar
+con validación/CV -> comprobar una vez con test -> empaquetar -> monitorizar).
 
 ---
 
-## 📈 Resultados principales
+##  Resultados principales
 
 ### Verificación fuerte de generalización (fase 16b)
 
@@ -19,9 +19,9 @@ Diagnóstico honesto con 4 pruebas (detalle en `notebooks/16_direccion_clasifica
 
 | Prueba | Resultado | Conclusión |
 |---|---|---|
-| Gap train/val/test (MAE) | train 14.7 · val 21.5 · test 204.7 | El gap train→test es **drift de mercado**, no overfitting severo (val gap pequeño) |
-| Learning curve (CV temporal) | val MAE 15→42→89→58→42 al crecer train | **No hay overfitting severo**: el val no empeora sistemáticamente con más datos |
-| Gap por familia | Ridge 23 · RF 264 · XGB 200 | Ridge es la familia con **menor overfitting** (por eso ganó) |
+| Gap train/val/test (MAE) | train 14.7  |  val 21.5  |  test 204.7 | El gap train->test es **drift de mercado**, no overfitting severo (val gap pequeño) |
+| Learning curve (CV temporal) | val MAE 15->42->89->58->42 al crecer train | **No hay overfitting severo**: el val no empeora sistemáticamente con más datos |
+| Gap por familia | Ridge 23  |  RF 264  |  XGB 200 | Ridge es la familia con **menor overfitting** (por eso ganó) |
 | vs naive-persistencia | naive MAE=17.6 vs modelo 204.7 | **El modelo NO supera a "mañana = hoy"** en h=1 |
 
 **Conclusión honesta**: el R² alto en train (0.998) y test (0.757) refleja que el
@@ -30,7 +30,7 @@ impredecible** (mercado eficiente). Para decisión de sube/baja, la regresión
 no es útil (dirección implícita 45%). **Por eso se añadió el clasificador de
 dirección** (ver siguiente sección).
 
-### Clasificador de dirección (sube/baja) — fase 16b
+### Clasificador de dirección (sube/baja) - fase 16b
 
 Modelo de clasificación binaria (RandomForest calibrado) que predice
 P(gold(t+1) > gold(t)) reutilizando las mismas features y split:
@@ -48,7 +48,7 @@ P(gold(t+1) > gold(t)) reutilizando las mismas features y split:
 - **Uso recomendado**: inclinación leve (p.ej. para alertas), NO como señal de
   trading automático. La probabilidad calibrada se sirve en `/predict_direction`.
 
-### ¿Es rentable seguir la tendencia predicha? (fase 17b — backtest riguroso)
+### ¿Es rentable seguir la tendencia predicha? (fase 17b - backtest riguroso)
 
 Análisis completo en `notebooks/17b_acierto_y_backtest.ipynb`:
 
@@ -65,21 +65,21 @@ El modelo está **sesgado a predecir sube** (80% de las veces): acierta muy
 bien las subidas pero falla las bajadas. Subir el umbral a 0.55-0.60 mejora
 la precisión (59-67%) a costa de operar menos.
 
-**Backtest (retorno correctamente alineado hoy→mañana, costes 0.1%/op):**
+**Backtest (retorno correctamente alineado hoy->mañana, costes 0.1%/op):**
 
 | Estrategia | Retorno | Sharpe | vs Buy&Hold |
 |---|---|---|---|
-| Buy & hold (referencia) | **+82.9%** | — | — |
-| LONG filtrado (clf, umbral 0.5) | +74.4% | 1.63 | −8.5 pp |
-| LONG filtrado (RF profundo, umbral 0.51) | +48.7% | 1.60 | −34 pp |
-| LONG filtrado (RF profundo, umbral 0.55) | +18.7% | 0.98 | −64 pp |
+| Buy & hold (referencia) | **+82.9%** | - | - |
+| LONG filtrado (clf, umbral 0.5) | +74.4% | 1.63 | -8.5 pp |
+| LONG filtrado (RF profundo, umbral 0.51) | +48.7% | 1.60 | -34 pp |
+| LONG filtrado (RF profundo, umbral 0.55) | +18.7% | 0.98 | -64 pp |
 
 **Significancia estadística:**
 
-- AUC test RF profundo = **0.571** (IC95% bootstrap [0.456, 0.545] — roza 0.5).
+- AUC test RF profundo = **0.571** (IC95% bootstrap [0.456, 0.545] - roza 0.5).
 - Test de permutación: p < 0.001 (la señal no es casualidad en test).
-- **CV temporal: AUC medio ≈ 0.516** (folds 0.51-0.53) → la señal **NO es estable** fuera de test.
-- t-test de retornos estrategia vs buy&hold: **p = 0.25 (no significativo)** → la
+- **CV temporal: AUC medio ~ 0.516** (folds 0.51-0.53) -> la señal **NO es estable** fuera de test.
+- t-test de retornos estrategia vs buy&hold: **p = 0.25 (no significativo)** -> la
   estrategia NO rinde más que mantener.
 
 **Conclusión honesta (fase 17b):**
@@ -107,17 +107,17 @@ Diagnóstico completo en `notebooks/17c_robustez_direccion.ipynb`:
 | **RF regularizado (depth=4, leaf=20)** | **0.695** | **0.569** | **0.126** |
 
 La regularización reduce el overfitting **sin perder test AUC** (0.569).
-La learning curve muestra que el gap se reduce al crecer train (0.29→0.19).
+La learning curve muestra que el gap se reduce al crecer train (0.29->0.19).
 
 **¿Underfitting? NO.** Más datos mejoran el test AUC (0.537 con 30% de train
-→ 0.557 con 100%). El modelo no es demasiado simple.
+-> 0.557 con 100%). El modelo no es demasiado simple.
 
 **Generalización real (walk-forward 2019-2025, reentrenando cada año):**
 
 - AUC medio: **0.539 ± 0.057** (solo 2/7 años superan 0.55).
 - La estrategia gana a buy&hold en **1/7 años**; estrategia media +5.5%/año
   vs buy&hold +15.3%/año.
-- Por régimen: alcista AUC=0.548 · bajista AUC=0.438 · lateral AUC=0.484.
+- Por régimen: alcista AUC=0.548  |  bajista AUC=0.438  |  lateral AUC=0.484.
   El modelo funciona mejor con tendencia alcista (momentum).
 
 **Conclusión de robustez**: la señal es **real pero débil** (AUC ~0.54 en
@@ -133,7 +133,7 @@ lag-1 = 0.985, *volatility clustering*). Notebook `17d_volatilidad_riesgo.ipynb`
 
 | Modelo | MAE (vol) | R² |
 |---|---|---|
-| Naive (vol actual) | 0.0553 | −0.212 |
+| Naive (vol actual) | 0.0553 | -0.212 |
 | **RF volatilidad (h=5)** | **0.0510** | **+0.058** |
 
 - El modelo supera al naive (**+7.9% MAE**) y captura los picos de 2024-25.
@@ -142,19 +142,19 @@ lag-1 = 0.985, *volatility clustering*). Notebook `17d_volatilidad_riesgo.ipynb`
 
 | Estrategia | Retorno | Sharpe | Max Drawdown | Exposición |
 |---|---|---|---|---|
-| Buy & hold | +86.4% | 1.61 | −11.3% | 100% |
-| **Sizing por volatilidad** | +76.8% | **1.88** | **−10.3%** | 80.7% |
+| Buy & hold | +86.4% | 1.61 | -11.3% | 100% |
+| **Sizing por volatilidad** | +76.8% | **1.88** | **-10.3%** | 80.7% |
 
 El sizing **mejora el Sharpe (1.88 vs 1.61) y reduce el drawdown** con menos
-exposición — la gestión de riesgo basada en volatilidad SÍ añade valor
+exposición - la gestión de riesgo basada en volatilidad SÍ añade valor
 práctico, a diferencia de la señal de dirección pura.
 
 ### Auditoría de datos temporales (fase 18b)
 
 Análisis exhaustivo en `notebooks/18b_auditoria_datos.ipynb`:
 
-**Frecuencias de actualización** (días entre cambios): 26 diarias · 13 mensuales
-(CPI, paro, M2, retail) · 1 semanal · PIB trimestral (92 días).
+**Frecuencias de actualización** (días entre cambios): 26 diarias  |  13 mensuales
+(CPI, paro, M2, retail)  |  1 semanal  |  PIB trimestral (92 días).
 
 **Lookahead bias detectado**: CPI, paro y PIB se actualizan **siempre el día 1
 del mes** en el dataset, pero en realidad se publican con 5-30 días de retraso.
@@ -169,13 +169,13 @@ mismo activo); tolerada por Ridge (regularización L2) y árboles.
 **Rango de fechas óptimo confirmado**: ventana 2000-2025 con cobertura 100%
 en todas las features tras warm-up. Antes de 2000 las series no existen.
 
-### Métricas de la regresión en TEST bloqueado (2023-01 → 2025-09, 684 días hábiles)
+### Métricas de la regresión en TEST bloqueado (2023-01 -> 2025-09, 684 días hábiles)
 
 | Modelo | MAE (USD/oz) | RMSE (USD/oz) | sMAPE | R² | Directional Acc. |
 |---|---|---|---|---|---|
-| **Naive (último valor)** | 879.67 | 1,007.6 | 42.6% | — | 0.7% |
+| **Naive (último valor)** | 879.67 | 1,007.6 | 42.6% | - | 0.7% |
 | **Ridge (final)** | **204.70** | **242.18** | **8.29%** | **0.7569** | 47.3% |
-| XGBoost | 199.7 (val) | 212.0 | 11.7% (val) | −3.3 | 51.2% |
+| XGBoost | 199.7 (val) | 212.0 | 11.7% (val) | -3.3 | 51.2% |
 
 - **Reducción del MAE del 76.8%** frente al baseline naive del informe original
   (último valor de train+val, 2022).
@@ -192,20 +192,20 @@ en todas las features tras warm-up. Antes de 2000 las series no existen.
 | 2024 | 204.8 | 8.9% |
 | 2025 | 392.6 | 13.4% |
 
-→ Drift de mercado fuerte (2024-25: rally del oro de 1,800 a 2,700+ USD/oz).
+-> Drift de mercado fuerte (2024-25: rally del oro de 1,800 a 2,700+ USD/oz).
 **Reentrenamiento periódico obligatorio** (fase 23).
 
 ### Explicabilidad (SHAP, top 5)
 
-1. `gold_spot_lag21` (precio del oro hace 1 mes) — domina
+1. `gold_spot_lag21` (precio del oro hace 1 mes) - domina
 2. `gold_ret_roll21` (retorno mensual)
-3. `silver_spot` (plata — hermana del oro)
+3. `silver_spot` (plata - hermana del oro)
 4. `sp500_futures` (apetito de riesgo)
 5. `consumer_confidence`, `us_gdp` (macroeconomía)
 
 ---
 
-## 🧠 Decisiones técnicas clave
+##  Decisiones técnicas clave
 
 | Decisión | Justificación |
 |---|---|
@@ -226,7 +226,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Python 3.11+ · numpy, pandas, scikit-learn, xgboost, lightgbm, catboost,
+Python 3.11+  |  numpy, pandas, scikit-learn, xgboost, lightgbm, catboost,
 statsmodels, optuna, shap, matplotlib, seaborn, fastapi, uvicorn, pytest, jupyterlab.
 
 ## ▶️ Ejecución
@@ -245,7 +245,7 @@ python -m src.features.build_features
 uvicorn src.api.main:app --reload
 #    GET  /health
 #    POST /predict           {"date": "2025-08-14", "features": {...}}
-#    POST /predict_direction  {"date": "2025-08-14", "features": {...}}  → P(sube)
+#    POST /predict_direction  {"date": "2025-08-14", "features": {...}}  -> P(sube)
 
 # 4) Predicción CLI
 python scripts/predict.py --date 2025-09-12
@@ -301,28 +301,28 @@ docker compose up -d     # API en http://localhost:8000
 
 ## 🗂️ Ficheros de repo
 
-`LICENSE` (MIT) · `pyproject.toml` · `pytest.ini` · `Makefile` ·
-`.env.example` · `.pre-commit-config.yaml` · `Dockerfile` ·
-`docker-compose.yml` · `.github/workflows/ci.yml` · `data/README.md`
+`LICENSE` (MIT)  |  `pyproject.toml`  |  `pytest.ini`  |  `Makefile`  | 
+`.env.example`  |  `.pre-commit-config.yaml`  |  `Dockerfile`  | 
+`docker-compose.yml`  |  `.github/workflows/ci.yml`  |  `data/README.md`
 
 ## 📂 Estructura
 
 ```
-├── configs/            # config.yaml (rutas/split/features) + params.yaml (hiperparámetros)
-├── data/raw|interim|processed/
-├── notebooks/          # 19 notebooks ejecutados (el corazón del proyecto)
-├── src/                # data/, features/, models/, evaluation/, api/
-├── models/             # final_model.joblib, preprocessor.joblib, feature_list.json
-├── reports/            # métricas (JSON/CSV) y figures/ (EDA, SHAP, errores)
-├── scripts/            # predict.py (CLI), monitor_drift.py, run_notebooks.sh
-├── tests/              # pytest
-└── docs/               # methodology-guide, informe técnico, model card, data card, manual API
+|---- configs/            # config.yaml (rutas/split/features) + params.yaml (hiperparámetros)
+|---- data/raw|interim|processed/
+|---- notebooks/          # 19 notebooks ejecutados (el corazón del proyecto)
+|---- src/                # data/, features/, models/, evaluation/, api/
+|---- models/             # final_model.joblib, preprocessor.joblib, feature_list.json
+|---- reports/            # métricas (JSON/CSV) y figures/ (EDA, SHAP, errores)
+|---- scripts/            # predict.py (CLI), monitor_drift.py, run_notebooks.sh
+|---- tests/              # pytest
++---- docs/               # methodology-guide, informe técnico, model card, data card, manual API
 ```
 
-## ⚠️ Limitaciones
+## [!] Limitaciones
 
 1. **No sirve para trading automático**: la dirección diaria no es predecible
-   (DA ≈ 47-48%). Uso analítico/de referencia.
+   (DA ~ 47-48%). Uso analítico/de referencia.
 2. **Drift de mercado**: el error crece con el tiempo (2025: MAE 393).
    Requiere reentrenamiento y monitorización continua.
 3. **Incertidumbre mal calibrada**: los intervalos P5-P95 (bootstrap) solo

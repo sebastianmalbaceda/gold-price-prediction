@@ -11,6 +11,7 @@ Todo se construye con ventanas deslizantes sobre datos PASADOS:
 Advertencia de leakage: las primeras `max(window)` filas del dataset
 resultante contienen NaNs y deben eliminarse (o el split debe respetarlas).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -35,7 +36,7 @@ def _target_returns(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
 def _target_rolling(df: pd.DataFrame, windows: list[int]) -> pd.DataFrame:
     log_price = np.log(df["gold_spot"])
     for w in windows:
-        df[f"gold_ret_roll{w}"] = log_price - log_price.shift(w)           # retorno w días
+        df[f"gold_ret_roll{w}"] = log_price - log_price.shift(w)  # retorno w días
         df[f"gold_rollmean_{w}"] = df["gold_spot"].rolling(w, min_periods=w // 2).mean()
         df[f"gold_rollstd_{w}"] = df["gold_spot"].rolling(w, min_periods=w // 2).std()
     return df
@@ -70,12 +71,11 @@ def _gap_indicators(df: pd.DataFrame, exog: list[str], raw: pd.DataFrame | None)
     if raw is None:
         return df
     # Solo para columnas presentes en el dataframe limpio (las excluidas no tienen indicador)
-    present = [c for c in exog
-               if c in df.columns and c not in ("date", "gold_spot")
-               and c in raw.columns]
+    present = [
+        c for c in exog if c in df.columns and c not in ("date", "gold_spot") and c in raw.columns
+    ]
     if not present:
         return df
-    raw_idx = pd.DatetimeIndex(raw["date"])
     raw_series = raw.set_index("date")[present]
     aligned = raw_series.reindex(pd.DatetimeIndex(df["date"]))
     missing_df = aligned.isna().astype("int8")
@@ -87,8 +87,9 @@ def _gap_indicators(df: pd.DataFrame, exog: list[str], raw: pd.DataFrame | None)
     return pd.concat([df.reset_index(drop=True), missing_df], axis=1)
 
 
-def build_features(df: pd.DataFrame, cfg: dict | None = None,
-                   raw: pd.DataFrame | None = None) -> pd.DataFrame:
+def build_features(
+    df: pd.DataFrame, cfg: dict | None = None, raw: pd.DataFrame | None = None
+) -> pd.DataFrame:
     """Genera el feature set completo a partir del dataframe limpio."""
     cfg = cfg or get_config()
     f = cfg["features"]

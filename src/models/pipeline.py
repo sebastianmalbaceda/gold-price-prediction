@@ -8,6 +8,7 @@ retornos). El único transformador con estado es RobustScaler (ajustado en
 train). No hay imputación con estado porque la limpieza forward-fill ya
 se hizo sobre datos pasados, sin futuro.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -17,9 +18,11 @@ from sklearn.preprocessing import RobustScaler
 
 def make_preprocessor() -> Pipeline:
     """Escalado robusto (menos sensible a outliers que StandardScaler)."""
-    return Pipeline([
-        ("scaler", RobustScaler(quantile_range=(5.0, 95.0))),
-    ])
+    return Pipeline(
+        [
+            ("scaler", RobustScaler(quantile_range=(5.0, 95.0))),
+        ]
+    )
 
 
 def fit_preprocessor(X_train: np.ndarray):

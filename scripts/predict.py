@@ -4,22 +4,22 @@ Uso:
     python scripts/predict.py --date 2025-09-12
     python scripts/predict.py --csv data/processed/test.parquet --out reports/batch_predictions.csv
 """
+
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import numpy as np
-import pandas as pd
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 
-from src.config import get_config, path_from_root
-from src.data.load_data import load_raw
-from src.features.build_features import build_features, make_targets
-from src.models.train_model import load_model_artifacts
+from src.config import get_config, path_from_root  # noqa: E402
+from src.data.load_data import load_raw  # noqa: E402
+from src.features.build_features import build_features, make_targets  # noqa: E402
+from src.models.train_model import load_model_artifacts  # noqa: E402
 
 
 def predict_row(features_row: pd.Series, model, pp, sel_cols, horizon: int = 1) -> float:
@@ -62,6 +62,7 @@ def predict_for_date(date_str: str, model, pp, sel_cols, cfg: dict) -> float:
     feats = make_targets(feats, cfg["target"]["horizons"])
     # Warm-up: mismas reglas que en train (drop_warmup con 260)
     from src.data.split import drop_warmup
+
     feats = drop_warmup(feats, warmup=260)
 
     if feats.empty or feats[sel_cols].isna().any().any():
@@ -75,8 +76,12 @@ def main():
     ap = argparse.ArgumentParser(description="Predicción del precio del oro (USD/oz)")
     ap.add_argument("--date", type=str, help="Fecha (YYYY-MM-DD) para una predicción puntual")
     ap.add_argument("--csv", type=str, help="CSV/parquet con filas de features a predecir")
-    ap.add_argument("--out", type=str, default="reports/batch_predictions.csv",
-                    help="Ruta de salida para modo --csv")
+    ap.add_argument(
+        "--out",
+        type=str,
+        default="reports/batch_predictions.csv",
+        help="Ruta de salida para modo --csv",
+    )
     args = ap.parse_args()
 
     cfg = get_config()

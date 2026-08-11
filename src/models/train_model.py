@@ -1,7 +1,6 @@
 """Entrenamiento y persistencia de modelos (fases 11-16)."""
-from __future__ import annotations
 
-import json
+from __future__ import annotations
 
 import json
 
@@ -10,8 +9,13 @@ import joblib
 from src.config import get_config, path_from_root
 
 
-def save_model_artifacts(model, preprocessor, feature_list: list[str],
-                         metrics: dict | None = None, cfg: dict | None = None) -> dict:
+def save_model_artifacts(
+    model,
+    preprocessor,
+    feature_list: list[str],
+    metrics: dict | None = None,
+    cfg: dict | None = None,
+) -> dict:
     """Guarda modelo, preprocesador, lista de features y métricas."""
     cfg = cfg or get_config()
     m = cfg["model"]

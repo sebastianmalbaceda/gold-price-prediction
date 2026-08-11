@@ -14,6 +14,7 @@ Reutiliza TODO el pipeline existente:
 La señal de dirección en mercados eficientes es débil (AUC ~0.53-0.56),
 por lo que la métrica primaria honesta es AUC-ROC, no accuracy.
 """
+
 from __future__ import annotations
 
 import json
@@ -41,14 +42,18 @@ def make_direction_targets(df: pd.DataFrame, horizons: list[int]) -> pd.DataFram
     return out
 
 
-def fit_direction_classifier(X_train: np.ndarray, y_train: np.ndarray,
-                             seed: int = 42):
+def fit_direction_classifier(X_train: np.ndarray, y_train: np.ndarray, seed: int = 42):
     """Entrena el clasificador de dirección (RandomForest, calibrado por CV)."""
     from sklearn.calibration import CalibratedClassifierCV
 
     base = RandomForestClassifier(
-        n_estimators=300, max_depth=8, min_samples_leaf=10,
-        max_features=0.5, random_state=seed, n_jobs=-1)
+        n_estimators=300,
+        max_depth=8,
+        min_samples_leaf=10,
+        max_features=0.5,
+        random_state=seed,
+        n_jobs=-1,
+    )
     # Calibración isotónica con CV interna (mejora la calidad de las
     # probabilidades, que es lo que se consume en producción)
     clf = CalibratedClassifierCV(base, method="isotonic", cv=3)
@@ -56,10 +61,14 @@ def fit_direction_classifier(X_train: np.ndarray, y_train: np.ndarray,
     return clf
 
 
-def save_classifier_artifacts(model, preprocessor, feature_list: list[str],
-                              metrics: dict | None = None,
-                              horizon: int = 1,
-                              cfg: dict | None = None) -> dict:
+def save_classifier_artifacts(
+    model,
+    preprocessor,
+    feature_list: list[str],
+    metrics: dict | None = None,
+    horizon: int = 1,
+    cfg: dict | None = None,
+) -> dict:
     """Guarda el clasificador, su preprocesador y las features usadas."""
     cfg = cfg or get_config()
     m = cfg["model"]
