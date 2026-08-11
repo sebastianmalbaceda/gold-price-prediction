@@ -81,6 +81,15 @@ buy&hold solo en 1/7 años (2025).
 - **Conclusión**: lo mejor posible con estos datos = señal modesta (AUC ~0.54).
 Uso práctico: indicador de riesgo (reducir exposición si P<0.5, alertas).
 
+## Volatilidad y gestión de riesgo (fase 17d)
+
+- Autocorrelación de la volatilidad: 0.985 (lag-1) → mucho más predecible.
+- RF volatilidad (h=5): R²=+0.058 vs naive −0.212 (+7.9% MAE).
+- Position sizing por volatilidad: Sharpe 1.88 vs 1.61 (buy&hold), maxDD
+  −10.3% vs −11.3%, exposición 80.7%.
+- **Conclusión**: la gestión de riesgo basada en volatilidad añade valor
+  práctico real (volatility targeting), a diferencia de la señal de dirección.
+
 ## Subgrupos / segmentos
 | Segmento | MAE regresión |
 |---|---|

@@ -3,30 +3,11 @@ from __future__ import annotations
 
 import json
 
+import json
+
 import joblib
-import numpy as np
-import pandas as pd
 
 from src.config import get_config, path_from_root
-
-
-def get_X_y(df: pd.DataFrame, features: list[str],
-            horizon: int = 1) -> tuple[np.ndarray, np.ndarray]:
-    """Extrae X (features) e y (target_h) de un dataframe."""
-    X = df[features].to_numpy(dtype=np.float64)
-    y = df[f"target_{horizon}"].to_numpy(dtype=np.float64)
-    return X, y
-
-
-def fit_and_predict(model, X_train, y_train, X_val, y_val):
-    """Ajusta con early stopping si el modelo lo soporta, predice en val."""
-    early_params = {}
-    if hasattr(model, "early_stopping_rounds") and hasattr(model, "fit"):
-        early_params = {"early_stopping_rounds": 50,
-                        "eval_set": [(X_val, y_val)],
-                        "verbose": False}
-    model.fit(X_train, y_train, **early_params)
-    return model, model.predict(X_val)
 
 
 def save_model_artifacts(model, preprocessor, feature_list: list[str],

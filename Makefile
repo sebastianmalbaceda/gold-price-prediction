@@ -26,8 +26,7 @@ api: ## Arranca la API REST
 test: ## Ejecuta los tests
 	$(PYTHON) -m pytest tests/ -q
 
-notebooks: ## Reconstruye los notebooks desde las fuentes _src
-	$(PYTHON) -X utf8 scripts/build_notebooks.py --all
+notebooks: ## (deprecado: los notebooks son autocontenidos; ejecutar con run-notebooks)
 
 run-notebooks: ## Ejecuta todos los notebooks (persiste outputs)
 	bash scripts/run_notebooks.sh

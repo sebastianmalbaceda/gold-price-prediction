@@ -134,8 +134,6 @@ def get_feature_columns(df: pd.DataFrame, horizons: list[int]) -> list[str]:
 
 
 if __name__ == "__main__":
-    import sys
-
     from src.data.load_data import build_interim, load_raw
 
     cfg = get_config()

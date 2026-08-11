@@ -5,7 +5,7 @@ aprendizaje supervisado de regresión con 60 variables exógenas financieras
 (tipos de interés, divisas, materias primas, índices, macroeconomía).
 
 Proyecto completo de ML siguiendo el índice maestro
-[`Indice-para-proyectos-de-ML-IA.md`](Indice-para-proyectos-de-ML-IA.md):
+[`docs/methodology-guide.md`](docs/methodology-guide.md):
 las 23 fases (definir → auditar → dividir → aprender solo con train → seleccionar
 con validación/CV → comprobar una vez con test → empaquetar → monitorizar).
 
@@ -126,6 +126,29 @@ es **lo mejor posible con estos datos**, y lo mejor posible es una señal
 modesta. Uso práctico recomendado: **indicador de riesgo** (reducir
 exposición cuando P<0.5, alertas), no estrategia de trading.
 
+### Predicción de volatilidad y gestión de riesgo (fase 17d)
+
+La **volatilidad** es mucho más predecible que la dirección (autocorrelación
+lag-1 = 0.985, *volatility clustering*). Notebook `17d_volatilidad_riesgo.ipynb`:
+
+| Modelo | MAE (vol) | R² |
+|---|---|---|
+| Naive (vol actual) | 0.0553 | −0.212 |
+| **RF volatilidad (h=5)** | **0.0510** | **+0.058** |
+
+- El modelo supera al naive (**+7.9% MAE**) y captura los picos de 2024-25.
+- **Position sizing por volatilidad** (exposición inversa a vol prevista,
+  target 12% anualizado):
+
+| Estrategia | Retorno | Sharpe | Max Drawdown | Exposición |
+|---|---|---|---|---|
+| Buy & hold | +86.4% | 1.61 | −11.3% | 100% |
+| **Sizing por volatilidad** | +76.8% | **1.88** | **−10.3%** | 80.7% |
+
+El sizing **mejora el Sharpe (1.88 vs 1.61) y reduce el drawdown** con menos
+exposición — la gestión de riesgo basada en volatilidad SÍ añade valor
+práctico, a diferencia de la señal de dirección pura.
+
 ### Métricas de la regresión en TEST bloqueado (2023-01 → 2025-09, 684 días hábiles)
 
 | Modelo | MAE (USD/oz) | RMSE (USD/oz) | sMAPE | R² | Directional Acc. |
@@ -230,6 +253,7 @@ pytest tests/ -q
 | `16_direccion_clasificacion.ipynb` | **16b. Verificación de generalización + clasificación de dirección (sube/baja)** |
 | `17b_acierto_y_backtest.ipynb` | **17b. Acierto por clase, backtest de rentabilidad y significancia estadística** |
 | `17c_robustez_direccion.ipynb` | **17c. Verificación de robustez (overfitting/underfitting), walk-forward y régimen** |
+| `17d_volatilidad_riesgo.ipynb` | **17d. Predicción de volatilidad y position sizing (gestión de riesgo)** |
 | `17_test_final.ipynb` | 17. Test final bloqueado |
 | `18_errores_explicabilidad.ipynb` | 18. Errores, SHAP e incertidumbre |
 | `19_20_robustez_etica.ipynb` | 19-20. Robustez, ética y seguridad |
@@ -265,13 +289,13 @@ docker compose up -d     # API en http://localhost:8000
 ```
 ├── configs/            # config.yaml (rutas/split/features) + params.yaml (hiperparámetros)
 ├── data/raw|interim|processed/
-├── notebooks/          # 15 notebooks ejecutados (fuentes en notebooks/_src/)
+├── notebooks/          # 19 notebooks ejecutados (el corazón del proyecto)
 ├── src/                # data/, features/, models/, evaluation/, api/
 ├── models/             # final_model.joblib, preprocessor.joblib, feature_list.json
 ├── reports/            # métricas (JSON/CSV) y figures/ (EDA, SHAP, errores)
-├── scripts/            # predict.py, monitor_drift.py, build_notebooks.py
+├── scripts/            # predict.py (CLI), monitor_drift.py, run_notebooks.sh
 ├── tests/              # pytest
-└── docs/               # informe técnico, model card, data card, manual API
+└── docs/               # methodology-guide, informe técnico, model card, data card, manual API
 ```
 
 ## ⚠️ Limitaciones
@@ -296,7 +320,7 @@ docker compose up -d     # API en http://localhost:8000
 
 ## 📚 Referencias
 
-- Índice maestro de fases: `Indice-para-proyectos-de-ML-IA.md`
+- Metodología (23 fases): [`docs/methodology-guide.md`](docs/methodology-guide.md)
 - Informe técnico completo: [`docs/informe_tecnico.md`](docs/informe_tecnico.md)
 - Model card: [`docs/model_card.md`](docs/model_card.md)
 - Data card / diccionario: [`docs/data_card.md`](docs/data_card.md)

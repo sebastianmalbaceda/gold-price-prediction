@@ -1,0 +1,19 @@
+{
+  "mae_rf": 0.050958842238130075,
+  "r2_rf": 0.0582848732668686,
+  "mae_naive": 0.05533612834243703,
+  "r2_naive": -0.21227522810811217,
+  "mejora_vs_naive_pct": 7.9103584501231445,
+  "autocorr_vol_lag1": 0.9853598819960364,
+  "backtest_sizing": {
+    "ret": 0.7680111172740924,
+    "sharpe": 1.883268725230505,
+    "max_dd": -0.10266339608928288
+  },
+  "backtest_buyhold": {
+    "ret": 0.8636829724350135,
+    "sharpe": 1.6061700503199712,
+    "max_dd": -0.11267070025498416
+  },
+  "conclusion": "La volatilidad es m\u00e1s predecible que la direcci\u00f3n (autocorrelaci\u00f3n alta). El modelo supera al naive y permite position sizing para gesti\u00f3n de riesgo."
+}

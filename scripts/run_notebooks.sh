@@ -24,7 +24,7 @@ else
               05_target_y_metricas 07_particion 08_10_preprocessing_features \
               11_13_baselines_modelado 14_tuning 15_16_seleccion_entrenamiento \
               16_direccion_clasificacion 17b_acierto_y_backtest 17c_robustez_direccion \
-              17_test_final \
+              17d_volatilidad_riesgo 17_test_final \
               18_errores_explicabilidad \
               19_20_robustez_etica 21_despliegue 22_documentacion \
               23_monitorizacion; do

@@ -5,7 +5,6 @@ Train 2000-2019 | Val 2020-2022 | Test 2023-2025 (configurado en config.yaml).
 """
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 

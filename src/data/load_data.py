@@ -15,15 +15,6 @@ def load_raw(cfg: dict | None = None) -> pd.DataFrame:
     return df
 
 
-def _is_business_day(ts: pd.Series) -> pd.Series:
-    """Día hábil según calendario NYSE (lunes a viernes, excluye festivos).
-
-    gold_spot cotiza en días hábiles del mercado de futuros COMEX/NYMEX.
-    """
-    cal = pd.offsets.CustomBusinessDay()
-    return cal.is_on_offset(pd.DatetimeIndex(ts))
-
-
 def clean_daily_series(df: pd.DataFrame, cfg: dict | None = None) -> pd.DataFrame:
     """Limpieza base de la serie diaria (fase 8, parte 1):
 

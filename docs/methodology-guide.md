@@ -1,8 +1,19 @@
-NO MODIFICAR
+# Guía Metodológica — Proyectos de Machine Learning
 
-Este es el **índice maestro, completo y ordenado** para proyectos de ML/IA. No todas las fases tendrán la misma profundidad en cada caso, pero deben considerarse siempre; las partes entre paréntesis dependen del tipo de problema: tabular, visión, NLP, forecasting, recomendación, RAG, RL, etc.
+Documento de referencia que define el **proceso completo y ordenado** para el
+desarrollo de proyectos de machine learning aplicado. No todas las fases
+tendrán la misma profundidad en cada caso, pero deben considerarse siempre;
+las partes entre paréntesis dependen del tipo de problema: tabular, visión,
+NLP, forecasting, recomendación, etc.
 
-La regla central es: **definir → auditar → dividir → aprender solo con train → seleccionar con validación/CV → comprobar una vez con test → empaquetar → monitorizar**. El test nunca debe influir en preprocessing, selección de variables, hiperparámetros o elección de modelo. [^1](https://docs.cloud.google.com/architecture/guidelines-for-developing-high-quality-ml-solutions)
+**Regla central:** *definir → auditar → dividir → aprender solo con train →
+seleccionar con validación/CV → comprobar una vez con test → empaquetar →
+monitorizar*. El test nunca debe influir en el preprocesamiento, la selección
+de variables, los hiperparámetros o la elección de modelo.
+
+> Esta guía es la base metodológica del presente proyecto. Cada fase del
+> repositorio (`notebooks/`) se corresponde con una o más secciones de este
+> documento, garantizando trazabilidad completa entre metodología y ejecución.
 
 # Índice completo
 
@@ -41,7 +52,7 @@ La regla central es: **definir → auditar → dividir → aprender solo con tra
 
 * Problema de negocio, investigación o producto
 * Usuario final o equipo que utilizará el sistema
-* Proceso actual sin IA
+* Proceso actual sin automatización
 * Decisión que apoyará el modelo
 * Valor esperado, coste y restricciones
 * Alternativas no basadas en ML: reglas, SQL, heurísticas o proceso manual

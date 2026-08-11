@@ -14,7 +14,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from src.config import get_config, path_from_root
+from src.config import get_config
 from src.models.classifier import load_classifier_artifacts
 from src.models.train_model import load_model_artifacts
 

@@ -199,6 +199,33 @@ estos datos** (sin memorizar, sin ser trivial): señal real pero débil
 (reducir exposición cuando P<0.5, alertas), no como fuente de rentabilidad
 superior a comprar y mantener.
 
+## 9f. Predicción de volatilidad y gestión de riesgo (fase 17d)
+
+La volatilidad es un proceso con **autocorrelación muy alta** (lag-1 = 0.985,
+*volatility clustering*), lo que la hace más predecible que la dirección.
+
+**Modelo de volatilidad realizada a 5 días (RF, mismas features):**
+
+| Modelo | MAE (vol anualizada) | R² |
+|---|---|---|
+| Naive (vol actual) | 0.0553 | −0.212 |
+| **RF volatilidad** | **0.0510** | **+0.058** |
+
+El modelo supera al naive (+7.9% MAE) y captura los picos de 2024-25.
+
+**Position sizing por volatilidad** (exposición = min(1, vol_objetivo/vol_prevista),
+con vol_objetivo = 12% anualizado):
+
+| Estrategia | Retorno | Sharpe | Max DD | Exposición |
+|---|---|---|---|---|
+| Buy & hold | +86.4% | 1.61 | −11.3% | 100% |
+| **Sizing vol** | +76.8% | **1.88** | **−10.3%** | 80.7% |
+
+La gestión de riesgo basada en volatilidad **mejora el Sharpe (1.88 vs 1.61)
+y reduce el drawdown** con menos exposición: es la extensión con mayor valor
+práctico del proyecto, coherente con la literatura cuantitativa
+(volatility targeting).
+
 ## 10. Error analysis y explicabilidad (fase 18)
 
 - **Errores crecientes en el tiempo:** 2023: MAE 87 → 2024: 205 → 2025: 393.

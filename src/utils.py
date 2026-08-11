@@ -6,9 +6,8 @@ import random
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
-from src.config import PROJECT_ROOT, path_from_root
+from src.config import path_from_root
 
 
 def set_seed(seed: int = 42) -> None:
