@@ -48,6 +48,52 @@ P(gold(t+1) > gold(t)) reutilizando las mismas features y split:
 - **Uso recomendado**: inclinación leve (p.ej. para alertas), NO como señal de
   trading automático. La probabilidad calibrada se sirve en `/predict_direction`.
 
+### ¿Es rentable seguir la tendencia predicha? (fase 17b — backtest riguroso)
+
+Análisis completo en `notebooks/17b_acierto_y_backtest.ipynb`:
+
+**Acierto del clasificador (test, umbral 0.5):**
+
+| Métrica | Valor |
+|---|---|
+| Acierto cuando REALMENTE sube (TPR) | **83.4%** |
+| Acierto cuando REALMENTE baja (TNR) | 23.7% |
+| Precisión al predecir sube | 55.8% |
+| Acierto global | 55.7% |
+
+El modelo está **sesgado a predecir sube** (80% de las veces): acierta muy
+bien las subidas pero falla las bajadas. Subir el umbral a 0.55-0.60 mejora
+la precisión (59-67%) a costa de operar menos.
+
+**Backtest (retorno correctamente alineado hoy→mañana, costes 0.1%/op):**
+
+| Estrategia | Retorno | Sharpe | vs Buy&Hold |
+|---|---|---|---|
+| Buy & hold (referencia) | **+82.9%** | — | — |
+| LONG filtrado (clf, umbral 0.5) | +74.4% | 1.63 | −8.5 pp |
+| LONG filtrado (RF profundo, umbral 0.51) | +48.7% | 1.60 | −34 pp |
+| LONG filtrado (RF profundo, umbral 0.55) | +18.7% | 0.98 | −64 pp |
+
+**Significancia estadística:**
+
+- AUC test RF profundo = **0.571** (IC95% bootstrap [0.456, 0.545] — roza 0.5).
+- Test de permutación: p < 0.001 (la señal no es casualidad en test).
+- **CV temporal: AUC medio ≈ 0.516** (folds 0.51-0.53) → la señal **NO es estable** fuera de test.
+- t-test de retornos estrategia vs buy&hold: **p = 0.25 (no significativo)** → la
+  estrategia NO rinde más que mantener.
+
+**Conclusión honesta (fase 17b):**
+
+1. El clasificador **distingue dirección mejor que el azar** en test (AUC 0.57),
+   y la confianza es informativa: P(sube|pred) sube de 54% a **64-77%** cuando
+   el modelo está seguro.
+2. **PERO no es rentable frente a comprar y mantener**: la señal es débil e
+   inestable (CV ~0.52), y el coste de oportunidad de salir del mercado supera
+   la ganancia de precisión, sobre todo en mercados con tendencia alcista.
+3. **Uso recomendado**: indicador de **riesgo/inclinación** (alertas, sizing
+   marginal, gestión de exposición), NO como estrategia de trading. La
+   regresión de niveles sirve como referencia de tendencia a medio plazo.
+
 ### Métricas de la regresión en TEST bloqueado (2023-01 → 2025-09, 684 días hábiles)
 
 | Modelo | MAE (USD/oz) | RMSE (USD/oz) | sMAPE | R² | Directional Acc. |
@@ -150,6 +196,7 @@ pytest tests/ -q
 | `14_tuning.ipynb` | 14. Hyperparameter tuning (Optuna) |
 | `15_16_seleccion_entrenamiento.ipynb` | 15-16. Selección y entrenamiento final |
 | `16_direccion_clasificacion.ipynb` | **16b. Verificación de generalización + clasificación de dirección (sube/baja)** |
+| `17b_acierto_y_backtest.ipynb` | **17b. Acierto por clase, backtest de rentabilidad y significancia estadística** |
 | `17_test_final.ipynb` | 17. Test final bloqueado |
 | `18_errores_explicabilidad.ipynb` | 18. Errores, SHAP e incertidumbre |
 | `19_20_robustez_etica.ipynb` | 19-20. Robustez, ética y seguridad |

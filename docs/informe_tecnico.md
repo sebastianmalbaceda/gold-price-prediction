@@ -133,6 +133,38 @@ y split. RandomForest calibrado (isotónico, CV interna).
   cerca del óptimo para P≈0.54).
 - Artefactos: `models/direction_classifier.joblib`, endpoint `/predict_direction`.
 
+## 9d. ¿Es rentable? Backtest y significancia (fase 17b)
+
+**Acierto por clase (test, umbral 0.5):** TPR (acierta subidas) = 83.4%,
+TNR (acierta bajadas) = 23.7%. El modelo está sesgado a predecir sube
+(80% de las veces) por el desbalance (P(sube)=54%) y el umbral 0.5.
+Subir el umbral mejora precisión: 0.55 → 59%, 0.60 → 67%.
+
+**Backtest (retorno hoy→mañana, costes 0.1%/operación):**
+
+| Estrategia | Retorno | Sharpe | vs Buy&Hold |
+|---|---|---|---|
+| Buy & hold | +82.9% | — | — |
+| LONG filtrado (clf calibrado, thr 0.5) | +74.4% | 1.63 | −8.5 pp |
+| LONG filtrado (RF profundo, thr 0.51) | +48.7% | 1.60 | −34 pp |
+| LONG-SHORT (thr 0.5) | −90.8%* | −5.78 | −174 pp |
+
+*El LONG-SHORT con el clasificador calibrado usaba el retorno desfasado
+(ayer→hoy); con el retorno correcto no se reproduce en el notebook 17b.
+
+**Significancia:**
+- AUC test (RF profundo) = 0.571; IC95% bootstrap = [0.456, 0.545] (roza 0.5).
+- Permutación: p < 0.001 (señal real en test).
+- CV temporal: AUC medio ≈ 0.516 → **señal inestable fuera de test**.
+- t-test estrategia vs buy&hold: p = 0.25 → **no rentable de forma robusta**.
+
+**Conclusión final**: la dirección del oro a 1 día tiene señal **débil y no
+explotable** de forma fiable: el clasificador acierta mejor que el azar y su
+confianza es informativa (P(sube|pred) 64-77% en los extremos), pero en
+backtest no supera a comprar y mantener. La rentabilidad a largo plazo de
+una estrategia de tendencia con estos datos no está demostrada; el valor
+real está en la gestión de riesgo (alertas, sizing), no en el timing.
+
 ## 10. Error analysis y explicabilidad (fase 18)
 
 - **Errores crecientes en el tiempo:** 2023: MAE 87 → 2024: 205 → 2025: 393.

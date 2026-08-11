@@ -51,6 +51,24 @@ valor está en el seguimiento de tendencia, no en el cambio diario.
 
 Señal **débil pero real** (AUC > 0.5). No apta para trading automático.
 
+## Análisis de rentabilidad (fase 17b)
+
+**Acierto por clase (test, umbral 0.5):**
+- Acierta cuando sube (TPR): **83.4%** · Acierta cuando baja (TNR): **23.7%**
+- Sesgo a predecir sube (80% de las veces) por desbalance + umbral 0.5.
+- Con umbral 0.55-0.60 la precisión sube a 59-67% (operando menos).
+
+**Backtest (retorno hoy→mañana, costes 0.1%/op):**
+- LONG filtrado (clf, thr 0.5): +74.4% (Sharpe 1.63) vs Buy&Hold +82.9%.
+- RF profundo (thr 0.51): +48.7% (Sharpe 1.60).
+- **Ninguna estrategia supera a comprar y mantener**.
+
+**Significancia:** AUC test 0.571 (IC95% [0.456, 0.545]); permutación p<0.001;
+CV AUC ≈ 0.516 (inestable); t-test retornos p=0.25 (no significativo).
+
+**Conclusión**: señal débil y no explotable de forma fiable. El modelo sirve
+como indicador de riesgo/inclinación, no como estrategia de trading.
+
 ## Subgrupos / segmentos
 | Segmento | MAE regresión |
 |---|---|

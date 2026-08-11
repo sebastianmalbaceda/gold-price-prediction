@@ -1,0 +1,14 @@
+{
+  "auc_test_rf": 0.5713389319144913,
+  "auc_ci95": [
+    0.4558567311454606,
+    0.5452988584235003
+  ],
+  "mejor_umbral": 0.51,
+  "mejor_sharpe": 1.599771286179757,
+  "mejor_ret": 0.487489345491533,
+  "buy_hold": 0.8289237754223628,
+  "t_stat": -1.153254690786117,
+  "p_value_ttest": 0.2492092880052747,
+  "nota": "Se\u00f1al significativa en test (AUC 0.57) pero NO rentable vs buy&hold: CV AUC ~0.52 (inestable). Uso: indicador de riesgo, no estrategia de trading."
+}
