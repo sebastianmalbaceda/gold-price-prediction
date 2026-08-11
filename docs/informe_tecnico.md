@@ -85,10 +85,10 @@ En test, el naive usa el último valor de train+val (2022) → MAE 879.
 
 | Métrica | Valor |
 |---|---|
-| MAE | **204.36 USD/oz** |
-| RMSE | 241.81 USD/oz |
-| sMAPE | **8.28%** |
-| R² | **0.758** |
+| MAE | **204.70 USD/oz** |
+| RMSE | 242.18 USD/oz |
+| sMAPE | **8.29%** |
+| R² | **0.7569** |
 | Directional Accuracy | 47.4% |
 | vs Naive | **−76.8% MAE** |
 
@@ -107,7 +107,7 @@ familia con **menor overfitting**, coherente con su victoria en selección.
 4. **vs naive-persistencia** (`gold_spot(t)`): naive MAE=17.6 vs modelo
 204.7 en test → **el modelo NO supera a "mañana = hoy" en h=1**.
 
-**Conclusión técnica**: el R² alto (0.998 train / 0.758 test) mide el
+**Conclusión técnica**: el R² alto (0.998 train / 0.757 test) mide el
 seguimiento de la **tendencia**, no la precisión del cambio diario. En un
 mercado eficiente, el cambio a 1 día es ruido: ningún modelo con datos
 públicos lo supera de forma consistente. El modelo de regresión es útil
@@ -120,11 +120,11 @@ y split. RandomForest calibrado (isotónico, CV interna).
 
 | Horizonte | CV AUC | Test AUC | Test ACC | P(sube) test |
 |---|---|---|---|---|
-| h=1 | 0.528 | **0.555** | 0.557 | 0.537 |
+| h=1 | 0.528 | **0.552** | 0.551 | 0.537 |
 | h=5 | 0.532 | 0.511 | 0.586 | 0.573 |
 | h=21 | 0.571 | 0.535 | 0.689 | 0.677 |
 
-- h=1 desplegado: **AUC=0.555, ACC=0.557, recall=0.834, PR-AUC=0.584, Brier=0.247**.
+- h=1 desplegado: **AUC=0.552, ACC=0.551, recall=0.790, PR-AUC=0.585, Brier=0.247**.
 - Señal débil pero real (AUC > 0.5 de forma consistente en CV y test).
 - Features más informativas: momentum (`gold_ret_lag1`, `gold_ret_roll63`)
   y riesgo (`geopolitical_risk`, `policy_uncertainty`, `usdinr_exchange_ret_lag1`).

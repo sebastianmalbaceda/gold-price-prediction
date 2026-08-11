@@ -37,11 +37,11 @@ P(gold(t+1) > gold(t)) reutilizando las mismas features y split:
 
 | Horizonte | CV AUC | Test AUC | Test ACC | P(sube) |
 |---|---|---|---|---|
-| h=1 | 0.528 | **0.555** | 0.557 | 0.537 |
+| h=1 | 0.528 | **0.552** | 0.551 | 0.537 |
 | h=5 | 0.532 | 0.511 | 0.586 | 0.573 |
 | h=21 | 0.571 | 0.535 | 0.689 | 0.677 |
 
-- **h=1 (desplegado): Test AUC=0.555, ACC=0.557, recall=0.834, PR-AUC=0.584**.
+- **h=1 (desplegado): Test AUC=0.552, ACC=0.551, recall=0.790, PR-AUC=0.585**.
 - Señal **débil pero real** (AUC > 0.5), coherente con eficiencia de mercado.
 - La señal proviene de momentum (`gold_ret_lag1`, `gold_ret_roll63`) y riesgo
   geopolítico (`geopolitical_risk`, `policy_uncertainty`).
@@ -174,12 +174,12 @@ en todas las features tras warm-up. Antes de 2000 las series no existen.
 | Modelo | MAE (USD/oz) | RMSE (USD/oz) | sMAPE | R² | Directional Acc. |
 |---|---|---|---|---|---|
 | **Naive (último valor)** | 879.67 | 1,007.6 | 42.6% | — | 0.7% |
-| **Ridge (final)** | **204.36** | **241.81** | **8.28%** | **0.758** | 47.4% |
+| **Ridge (final)** | **204.70** | **242.18** | **8.29%** | **0.7569** | 47.3% |
 | XGBoost | 199.7 (val) | 212.0 | 11.7% (val) | −3.3 | 51.2% |
 
 - **Reducción del MAE del 76.8%** frente al baseline naive del informe original
   (último valor de train+val, 2022).
-- R² = 0.758: el modelo captura la tendencia y el nivel del oro.
+- R² = 0.757: el modelo captura la tendencia y el nivel del oro.
 - **Limitación documentada**: frente al naive-persistencia diario
   (gold_spot(t), MAE=17.6) el modelo NO gana en h=1; su valor está en el
   seguimiento de tendencia a medio plazo y como referencia de nivel.

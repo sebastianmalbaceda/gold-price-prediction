@@ -27,10 +27,10 @@ Entrenados con datos 2000-2022, evaluados en test 2023-2025.
 
 | Métrica | Valor |
 |---|---|
-| MAE | 204.36 USD/oz |
-| RMSE | 241.81 USD/oz |
-| sMAPE | 8.28% |
-| R² | 0.758 |
+| MAE | 204.70 USD/oz |
+| RMSE | 242.18 USD/oz |
+| sMAPE | 8.29% |
+| R² | 0.7569 |
 | DA | 47.4% |
 | vs naive | −76.8% MAE |
 
@@ -41,7 +41,7 @@ valor está en el seguimiento de tendencia, no en el cambio diario.
 
 | Métrica | Valor |
 |---|---|
-| AUC-ROC | **0.555** |
+| AUC-ROC | **0.552** |
 | PR-AUC | 0.584 |
 | Accuracy | 0.557 |
 | Recall (sube) | 0.834 |
