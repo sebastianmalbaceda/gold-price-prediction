@@ -30,7 +30,7 @@ Entrenados con datos 2000-2022, evaluados en test 2023-2025.
 | MAE | 204.70 USD/oz |
 | RMSE | 242.18 USD/oz |
 | sMAPE | 8.29% |
-| R² | 0.7569 |
+| R^2 | 0.7569 |
 | DA | 47.4% |
 | vs naive | -76.8% MAE |
 
@@ -75,7 +75,7 @@ como indicador de riesgo/inclinación, no como estrategia de trading.
 test 0.56). Con regularización (depth=4, leaf=20) el gap baja a **0.126**
 sin perder test AUC (0.569).
 - **Underfitting**: no (más datos mejoran; el modelo captura la señal).
-- **Walk-forward 2019-2025**: AUC medio 0.539 ± 0.057; la estrategia gana a
+- **Walk-forward 2019-2025**: AUC medio 0.539 +/- 0.057; la estrategia gana a
 buy&hold solo en 1/7 años (2025).
 - **Por régimen**: alcista AUC 0.548  |  bajista 0.438  |  lateral 0.484.
 - **Conclusión**: lo mejor posible con estos datos = señal modesta (AUC ~0.54).
@@ -84,7 +84,7 @@ Uso práctico: indicador de riesgo (reducir exposición si P<0.5, alertas).
 ## Volatilidad y gestión de riesgo (fase 17d)
 
 - Autocorrelación de la volatilidad: 0.985 (lag-1) -> mucho más predecible.
-- RF volatilidad (h=5): R²=+0.058 vs naive -0.212 (+7.9% MAE).
+- RF volatilidad (h=5): R^2=+0.058 vs naive -0.212 (+7.9% MAE).
 - Position sizing por volatilidad: Sharpe 1.88 vs 1.61 (buy&hold), maxDD
   -10.3% vs -11.3%, exposición 80.7%.
 - **Conclusión**: la gestión de riesgo basada en volatilidad añade valor
@@ -112,11 +112,11 @@ la distribución de entrenamiento (drift).
   ~204 USD/oz (y hasta 600 en 2025) debe comunicarse a los usuarios.
 
 ## Mantenimiento
-- Reentrenar cuando el MAE rodante (60d) supere 1.5× el MAE de test o cuando
+- Reentrenar cuando el MAE rodante (60d) supere 1.5x el MAE de test o cuando
   el KS-drift sea persistente (script `scripts/monitor_drift.py`).
 - Versionado de artefactos (`models/`), rollback conservando el modelo anterior.
 - Propietario: equipo de datos (proyecto educativo).
 
 ## Versiones
-- v1.0.0 (2025): Ridge α=0.0022, 110 features, RobustScaler, h=1.
+- v1.0.0 (2025): Ridge alpha=0.0022, 110 features, RobustScaler, h=1.
 - v1.1.0 (2025): + clasificador de dirección (RandomForest calibrado), endpoint `/predict_direction`.

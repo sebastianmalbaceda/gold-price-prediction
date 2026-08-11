@@ -6,7 +6,7 @@
 
 **Tipo:** regresión / forecasting de series temporales con covariables exógenas.
 
-**Horizontes:** h ∈ {1, 5, 21} días hábiles. **Unidad:** día hábil (COMEX/NYMEX).
+**Horizontes:** h en {1, 5, 21} días hábiles. **Unidad:** día hábil (COMEX/NYMEX).
 
 **Entrada en t:** precio del oro y 59 exógenas en t y pasadas (nunca futuras).
 
@@ -27,7 +27,7 @@
 
 - `gold_spot`: tendencia alcista estructural, cambios de régimen (2008, 2011, 2020, 2024).
 - **No estacionaria en niveles** (ADF p>0.05); retornos log estacionarios.
-- Autocorrelación: altísima en niveles (ρ(lag1)~0.999), casi nula en retornos -> predecir niveles es "fácil" (persistencia), predecir direcciones es difícil.
+- Autocorrelación: altísima en niveles (rho(lag1)~0.999), casi nula en retornos -> predecir niveles es "fácil" (persistencia), predecir direcciones es difícil.
 - Volatilidad agrupada (clustering) típica de activos financieros.
 - Correlaciones esperadas: negativo con DXY, positivo con plata/metales.
 
@@ -47,7 +47,7 @@
 
 - Limpieza: días hábiles, ffill exógenas (solo pasado), exclusión por cobertura.
 - Escalado: **RobustScaler (5-95%) ajustado SOLO con train**, aplicado con `transform` a val/test.
-- Features (146 brutas -> **85 finales** tras filtro de redundancia |ρ|>0.98 con prioridad a niveles):
+- Features (146 brutas -> **85 finales** tras filtro de redundancia |rho|>0.98 con prioridad a niveles):
   - Lags del target: 1, 2, 3, 5, 10, 21.
   - Retornos log del target a esos lags.
   - Rolling: retorno, media, desv. a 5/21/63/126 días.
@@ -71,14 +71,14 @@ En test, el naive usa el último valor de train+val (2022) -> MAE 879.
 
 - Familias: Ridge, RandomForest, XGBoost, LightGBM, CatBoost.
 - **Optuna (TPE, 77 trials totales)** con TimeSeriesSplit, optimizando MAE medio.
-- Resultados CV: **Ridge MAE 55.1** (α~0.002) vs RF 227 / XGB 199 / LGBM 197 / Cat 227.
-- Los árboles no extrapolan niveles no estacionarios (R² negativo en validation); el modelo lineal captura tendencia + lags.
+- Resultados CV: **Ridge MAE 55.1** (alpha~0.002) vs RF 227 / XGB 199 / LGBM 197 / Cat 227.
+- Los árboles no extrapolan niveles no estacionarios (R^2 negativo en validation); el modelo lineal captura tendencia + lags.
 
 ## 8. Selección y entrenamiento final (fases 15-16)
 
-- **Validation (2020-2022):** Ridge MAE=37.0, RMSE=46.2, sMAPE=2.07%, R²=0.794, DA=48.7%.
-  RF/XGB/LGBM/Cat: MAE 199-297, R² negativo -> descartados.
-- **Decisión:** Ridge con α=0.0022, 85 features, RobustScaler.
+- **Validation (2020-2022):** Ridge MAE=37.0, RMSE=46.2, sMAPE=2.07%, R^2=0.794, DA=48.7%.
+  RF/XGB/LGBM/Cat: MAE 199-297, R^2 negativo -> descartados.
+- **Decisión:** Ridge con alpha=0.0022, 85 features, RobustScaler.
 - Reentrenado con train+val (5,739 filas). Artefactos: `models/final_model.joblib`, `preprocessor.joblib`, `feature_list.json`.
 
 ## 9. Evaluación final en test (fase 17)
@@ -88,7 +88,7 @@ En test, el naive usa el último valor de train+val (2022) -> MAE 879.
 | MAE | **204.70 USD/oz** |
 | RMSE | 242.18 USD/oz |
 | sMAPE | **8.29%** |
-| R² | **0.7569** |
+| R^2 | **0.7569** |
 | Directional Accuracy | 47.4% |
 | vs Naive | **-76.8% MAE** |
 
@@ -107,7 +107,7 @@ familia con **menor overfitting**, coherente con su victoria en selección.
 4. **vs naive-persistencia** (`gold_spot(t)`): naive MAE=17.6 vs modelo
 204.7 en test -> **el modelo NO supera a "mañana = hoy" en h=1**.
 
-**Conclusión técnica**: el R² alto (0.998 train / 0.757 test) mide el
+**Conclusión técnica**: el R^2 alto (0.998 train / 0.757 test) mide el
 seguimiento de la **tendencia**, no la precisión del cambio diario. En un
 mercado eficiente, el cambio a 1 día es ruido: ningún modelo con datos
 públicos lo supera de forma consistente. El modelo de regresión es útil
@@ -188,7 +188,7 @@ train (0.29->0.19), típico de overfitting controlable con regularización.
 | 2024 | 0.545 | +11.7% | +27.1% |
 | 2025 | 0.656 | +31.6% | +27.1% |
 
-- AUC medio **0.539 ± 0.057**; solo 2025 supera claramente 0.55.
+- AUC medio **0.539 +/- 0.057**; solo 2025 supera claramente 0.55.
 - La estrategia gana a buy&hold solo en 2025 (mercado con tendencia fuerte).
 - Por régimen: alcista AUC=0.548, bajista 0.438, lateral 0.484 -> la señal
 de momentum es condicional al régimen.
@@ -206,7 +206,7 @@ La volatilidad es un proceso con **autocorrelación muy alta** (lag-1 = 0.985,
 
 **Modelo de volatilidad realizada a 5 días (RF, mismas features):**
 
-| Modelo | MAE (vol anualizada) | R² |
+| Modelo | MAE (vol anualizada) | R^2 |
 |---|---|---|
 | Naive (vol actual) | 0.0553 | -0.212 |
 | **RF volatilidad** | **0.0510** | **+0.058** |
@@ -278,6 +278,6 @@ antes de 2000 las series no existen. El rango es óptimo y está justificado.
 
 ## 14. Riesgos y decisión final
 
-- **Riesgo principal:** drift no estacionario -> reentrenar con cadencia (p. ej. mensual/trimestral) + alerta si MAE rodante > 1.5× MAE test.
+- **Riesgo principal:** drift no estacionario -> reentrenar con cadencia (p. ej. mensual/trimestral) + alerta si MAE rodante > 1.5x MAE test.
 - **Decisión:** Ridge es el modelo final por calidad/estabilidad/coste/interpretabilidad (SHAP lineal).
 - Alternativas futuras: modelos sobre retornos + reintegración de niveles (evita el problema de extrapolación), LSTM/Transformer con ventana fija, conformal prediction para intervalos calibrados, features de volatilidad (GVZ) y posicionamiento (CFTC).

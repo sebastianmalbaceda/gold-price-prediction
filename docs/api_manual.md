@@ -62,7 +62,7 @@ oro suba en t+1 y la dirección con umbral 0.5.
 }
 ```
 
-> [!] **Interpretación honesta**: el clasificador tiene AUC ~ 0.55 en test. La
+> **Interpretación honesta**: el clasificador tiene AUC ~ 0.55 en test. La
 > señal es débil (mercado eficiente); `probability_up` debe leerse como una
 > **leve inclinación**, no como una certeza. No usar como señal de trading
 > automático sin supervisión.

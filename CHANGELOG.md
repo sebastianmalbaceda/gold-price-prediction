@@ -18,7 +18,7 @@ proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
   entrenamiento final, test bloqueado, análisis de errores, robustez,
   ética, despliegue, documentación y monitorización).
 - Modelo de regresión (Ridge) para niveles: MAE 204.70 USD/oz en test
-  (2023-2025), R² = 0.757.
+  (2023-2025), R^2 = 0.757.
 - Clasificador de dirección (RandomForest calibrado): AUC 0.552 en test.
 - Modelo de volatilidad realizada con position sizing: Sharpe 1.88 vs 1.61
   de buy & hold.

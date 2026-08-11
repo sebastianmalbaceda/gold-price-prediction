@@ -302,7 +302,7 @@ La **selección de métricas debe realizarse antes del entrenamiento**. No se es
 * Clasificación balanceada: accuracy, F1
 * Clasificación desbalanceada: PR-AUC, recall, precision, F-beta, coste
 * Fraude: recall bajo presupuesto de alertas, PR-AUC, coste de errores
-* Regresión: MAE, RMSE, R² complementario
+* Regresión: MAE, RMSE, R^2 complementario
 * Forecasting: MAE, RMSE, sMAPE por horizonte
 * Ranking/recomendación: Recall@k, Precision@k, NDCG@k, MRR
 * Detección: mAP e IoU
@@ -1030,7 +1030,7 @@ Input crudo
 -> respuesta
 ```
 
-El sistema de inferencia debe usar exactamente el preprocessing entrenado; recrearlo manualmente de forma “similar” causa divergencias entre entrenamiento y producción. [^4](https://developers.google.com/machine-learning/guides/rules-of-ml)
+El sistema de inferencia debe usar exactamente el preprocessing entrenado; recrearlo manualmente de forma "similar" causa divergencias entre entrenamiento y producción. [^4](https://developers.google.com/machine-learning/guides/rules-of-ml)
 
 ## 21.2 Formas de entrega
 
@@ -1208,5 +1208,5 @@ Cuando lleguen etiquetas reales:
 
 La idea definitiva es: **el EDA genera hipótesis; train aprende; validation y CV eligen; test verifica; análisis explica; despliegue operacionaliza; monitorización mantiene la validez**.
 
-<div align="center">⁂</div>
+---
 

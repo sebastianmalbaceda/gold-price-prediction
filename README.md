@@ -11,7 +11,7 @@ con validación/CV -> comprobar una vez con test -> empaquetar -> monitorizar).
 
 ---
 
-##  Resultados principales
+## Resultados principales
 
 ### Verificación fuerte de generalización (fase 16b)
 
@@ -24,7 +24,7 @@ Diagnóstico honesto con 4 pruebas (detalle en `notebooks/16_direccion_clasifica
 | Gap por familia | Ridge 23  |  RF 264  |  XGB 200 | Ridge es la familia con **menor overfitting** (por eso ganó) |
 | vs naive-persistencia | naive MAE=17.6 vs modelo 204.7 | **El modelo NO supera a "mañana = hoy"** en h=1 |
 
-**Conclusión honesta**: el R² alto en train (0.998) y test (0.757) refleja que el
+**Conclusión honesta**: el R^2 alto en train (0.998) y test (0.757) refleja que el
 modelo sigue la **tendencia**, pero el cambio diario del oro es **ruido
 impredecible** (mercado eficiente). Para decisión de sube/baja, la regresión
 no es útil (dirección implícita 45%). **Por eso se añadió el clasificador de
@@ -114,7 +114,7 @@ La learning curve muestra que el gap se reduce al crecer train (0.29->0.19).
 
 **Generalización real (walk-forward 2019-2025, reentrenando cada año):**
 
-- AUC medio: **0.539 ± 0.057** (solo 2/7 años superan 0.55).
+- AUC medio: **0.539 +/- 0.057** (solo 2/7 años superan 0.55).
 - La estrategia gana a buy&hold en **1/7 años**; estrategia media +5.5%/año
   vs buy&hold +15.3%/año.
 - Por régimen: alcista AUC=0.548  |  bajista AUC=0.438  |  lateral AUC=0.484.
@@ -131,7 +131,7 @@ exposición cuando P<0.5, alertas), no estrategia de trading.
 La **volatilidad** es mucho más predecible que la dirección (autocorrelación
 lag-1 = 0.985, *volatility clustering*). Notebook `17d_volatilidad_riesgo.ipynb`:
 
-| Modelo | MAE (vol) | R² |
+| Modelo | MAE (vol) | R^2 |
 |---|---|---|
 | Naive (vol actual) | 0.0553 | -0.212 |
 | **RF volatilidad (h=5)** | **0.0510** | **+0.058** |
@@ -171,7 +171,7 @@ en todas las features tras warm-up. Antes de 2000 las series no existen.
 
 ### Métricas de la regresión en TEST bloqueado (2023-01 -> 2025-09, 684 días hábiles)
 
-| Modelo | MAE (USD/oz) | RMSE (USD/oz) | sMAPE | R² | Directional Acc. |
+| Modelo | MAE (USD/oz) | RMSE (USD/oz) | sMAPE | R^2 | Directional Acc. |
 |---|---|---|---|---|---|
 | **Naive (último valor)** | 879.67 | 1,007.6 | 42.6% | - | 0.7% |
 | **Ridge (final)** | **204.70** | **242.18** | **8.29%** | **0.7569** | 47.3% |
@@ -179,7 +179,7 @@ en todas las features tras warm-up. Antes de 2000 las series no existen.
 
 - **Reducción del MAE del 76.8%** frente al baseline naive del informe original
   (último valor de train+val, 2022).
-- R² = 0.757: el modelo captura la tendencia y el nivel del oro.
+- R^2 = 0.757: el modelo captura la tendencia y el nivel del oro.
 - **Limitación documentada**: frente al naive-persistencia diario
   (gold_spot(t), MAE=17.6) el modelo NO gana en h=1; su valor está en el
   seguimiento de tendencia a medio plazo y como referencia de nivel.
@@ -205,7 +205,7 @@ en todas las features tras warm-up. Antes de 2000 las series no existen.
 
 ---
 
-##  Decisiones técnicas clave
+## Decisiones técnicas clave
 
 | Decisión | Justificación |
 |---|---|
@@ -214,11 +214,11 @@ en todas las features tras warm-up. Antes de 2000 las series no existen.
 | **Features**: lags + retornos + rolling del target, exógenas con lag 1 + retorno, calendario, indicadores de ausencia | Sin leakage (todo hacia atrás) |
 | **Forward-fill** (solo pasado) para exógenas con huecos | Datos macro publicados con retraso |
 | **Ventana 2000-2025** (6,705 días hábiles) | Cobertura fiable; antes de 2000 no hay datos |
-| **85 features** tras filtro de redundancia (|ρ|>0.98) | Reduce colinealidad |
+| **85 features** tras filtro de redundancia (|rho|>0.98) | Reduce colinealidad |
 
 ---
 
-## 🚀 Instalación
+## Instalación
 
 ```bash
 python -m venv .venv
@@ -229,7 +229,7 @@ pip install -r requirements.txt
 Python 3.11+  |  numpy, pandas, scikit-learn, xgboost, lightgbm, catboost,
 statsmodels, optuna, shap, matplotlib, seaborn, fastapi, uvicorn, pytest, jupyterlab.
 
-## ▶️ Ejecución
+## Ejecución
 
 ```bash
 # 0) Auditoría y limpieza -> data/interim
@@ -257,7 +257,7 @@ python scripts/monitor_drift.py --window 60
 pytest tests/ -q
 ```
 
-## 📓 Notebooks (una fase por notebook)
+## Notebooks (una fase por notebook)
 
 | Notebook | Fase |
 |---|---|
@@ -282,7 +282,7 @@ pytest tests/ -q
 | `22_documentacion.ipynb` | 22. Documentación |
 | `23_monitorizacion.ipynb` | 23. Monitorización y reentrenamiento |
 
-## 🧪 Tests y calidad
+## Tests y calidad
 
 ```bash
 pytest tests/ -q        # 20 tests (split, métricas, features, limpieza, API)
@@ -292,20 +292,20 @@ python -m compileall -q src scripts tests   # verificación de sintaxis
 CI en GitHub Actions (`.github/workflows/ci.yml`): tests + flake8 + black.
 Pre-commit hooks en `.pre-commit-config.yaml` (opcional).
 
-## 🐳 Despliegue con Docker
+## Despliegue con Docker
 
 ```bash
 docker build -t gold-api .
 docker compose up -d     # API en http://localhost:8000
 ```
 
-## 🗂️ Ficheros de repo
+## Ficheros de repo
 
 `LICENSE` (MIT)  |  `pyproject.toml`  |  `pytest.ini`  |  `Makefile`  | 
 `.env.example`  |  `.pre-commit-config.yaml`  |  `Dockerfile`  | 
 `docker-compose.yml`  |  `.github/workflows/ci.yml`  |  `data/README.md`
 
-## 📂 Estructura
+## Estructura
 
 ```
 |---- configs/            # config.yaml (rutas/split/features) + params.yaml (hiperparámetros)
@@ -319,7 +319,7 @@ docker compose up -d     # API en http://localhost:8000
 +---- docs/               # methodology-guide, informe técnico, model card, data card, manual API
 ```
 
-## [!] Limitaciones
+## Limitaciones
 
 1. **No sirve para trading automático**: la dirección diaria no es predecible
    (DA ~ 47-48%). Uso analítico/de referencia.
@@ -333,13 +333,13 @@ docker compose up -d     # API en http://localhost:8000
 5. **Datos macro con retraso**: CPI, PIB, etc. se forward-fillean; el modelo
    no ve las revisiones posteriores (como en producción real).
 
-## 📄 Licencia y datos
+## Licencia y datos
 
 - Dataset: `data/raw/gold-price-prediction-dataset.csv` (compilación pública,
   uso académico). No contiene datos personales.
 - Código: ver `LICENSE`.
 
-## 📚 Referencias
+## Referencias
 
 - Metodología (23 fases): [`docs/methodology-guide.md`](docs/methodology-guide.md)
 - Informe técnico completo: [`docs/informe_tecnico.md`](docs/informe_tecnico.md)
