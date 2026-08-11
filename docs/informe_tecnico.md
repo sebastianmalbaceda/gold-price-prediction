@@ -226,6 +226,30 @@ y reduce el drawdown** con menos exposición: es la extensión con mayor valor
 práctico del proyecto, coherente con la literatura cuantitativa
 (volatility targeting).
 
+## 9g. Auditoría de datos temporales (fase 18b)
+
+**Frecuencias de actualización** (días entre cambios de valor, ventana 2000+):
+
+| Frecuencia | Variables |
+|---|---|
+| Diaria (1 día) | 26 (tipos, FX, materias primas, índices) |
+| Semanal (5 días) | 1 (us_financial_stress_index) |
+| Mensual (23-31 días) | 13 (CPI, paro, M2, retail, sentimiento, fed_funds...) |
+| Trimestral (92 días) | PIB (us_gdp) |
+
+**Lookahead bias**: las macro se actualizan el **día 1 del mes** en el dataset
+(P10=P90=1), pero su publicación real es 5-30 días después (BLS: CPI día 10-15;
+BEA: PIB ~30 días). El ffill rellena huecos pero no corrige el adelanto.
+Impacto medido: AUC +0.003 (las macro adelantadas aportan poco; la señal
+principal es el momentum del oro). Corrección propuesta: `PUBLICATION_LAG`.
+
+**Multicolinealidad (VIF)**: 24/110 features con VIF>10 (us_gdp 79.9,
+sp500_futures 73.3, usdcny 72.0, gold_spot_lag21 60.9). Esperable por los
+lags del mismo activo; el modelo Ridge (L2) y los árboles la toleran.
+
+**Rango de fechas**: ventana 2000-2025 con cobertura 100% tras warm-up;
+antes de 2000 las series no existen. El rango es óptimo y está justificado.
+
 ## 10. Error analysis y explicabilidad (fase 18)
 
 - **Errores crecientes en el tiempo:** 2023: MAE 87 → 2024: 205 → 2025: 393.

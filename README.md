@@ -149,6 +149,26 @@ El sizing **mejora el Sharpe (1.88 vs 1.61) y reduce el drawdown** con menos
 exposición — la gestión de riesgo basada en volatilidad SÍ añade valor
 práctico, a diferencia de la señal de dirección pura.
 
+### Auditoría de datos temporales (fase 18b)
+
+Análisis exhaustivo en `notebooks/18b_auditoria_datos.ipynb`:
+
+**Frecuencias de actualización** (días entre cambios): 26 diarias · 13 mensuales
+(CPI, paro, M2, retail) · 1 semanal · PIB trimestral (92 días).
+
+**Lookahead bias detectado**: CPI, paro y PIB se actualizan **siempre el día 1
+del mes** en el dataset, pero en realidad se publican con 5-30 días de retraso.
+El forward-fill rellena huecos pero NO corrige este adelanto. Impacto medido:
++0.003 AUC (pequeño, la señal principal es el momentum del oro). Corrección
+propuesta: `PUBLICATION_LAG` (desplazar cada macro k días hábiles).
+
+**Multicolinealidad**: 24/110 features con VIF > 10 (us_gdp 79.9, sp500 73.3,
+usdcny 72.0, gold_spot_lag21 60.9). Esperable en series financieras (lags del
+mismo activo); tolerada por Ridge (regularización L2) y árboles.
+
+**Rango de fechas óptimo confirmado**: ventana 2000-2025 con cobertura 100%
+en todas las features tras warm-up. Antes de 2000 las series no existen.
+
 ### Métricas de la regresión en TEST bloqueado (2023-01 → 2025-09, 684 días hábiles)
 
 | Modelo | MAE (USD/oz) | RMSE (USD/oz) | sMAPE | R² | Directional Acc. |
@@ -256,6 +276,7 @@ pytest tests/ -q
 | `17d_volatilidad_riesgo.ipynb` | **17d. Predicción de volatilidad y position sizing (gestión de riesgo)** |
 | `17_test_final.ipynb` | 17. Test final bloqueado |
 | `18_errores_explicabilidad.ipynb` | 18. Errores, SHAP e incertidumbre |
+| `18b_auditoria_datos.ipynb` | **18b. Auditoría de datos temporales: frecuencias, lookahead bias, multicolinealidad** |
 | `19_20_robustez_etica.ipynb` | 19-20. Robustez, ética y seguridad |
 | `21_despliegue.ipynb` | 21. Empaquetado y API |
 | `22_documentacion.ipynb` | 22. Documentación |
