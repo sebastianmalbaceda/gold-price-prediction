@@ -250,6 +250,28 @@ lags del mismo activo; el modelo Ridge (L2) y los árboles la toleran.
 **Rango de fechas**: ventana 2000-2025 con cobertura 100% tras warm-up;
 antes de 2000 las series no existen. El rango es óptimo y está justificado.
 
+## 9h. Comparación con la versión previa (referencia TFG)
+
+Se evaluaron experimentalmente las técnicas distintivas de la versión
+anterior (rama `main`, trabajo de fin de grado) para determinar si aportaban
+valor sobre el pipeline actual:
+
+| Técnica de la versión previa | Resultado en v2 | Decisión |
+|---|---|---|
+| Voting/Ensemble (RF+XGB+LR) | CV AUC 0.532 vs 0.529 (RF actual); test 0.546 vs 0.552 | **No mejora**: señal demasiado débil para que el ensemble aporte |
+| Mutual Information (selección) | Top features MI coinciden con importancia RF (retornos FX y momentum) | **Sin features ocultas**: el pipeline actual ya las captura |
+| Features técnicas (RSI, MA50/200, vol21) | AUC 0.557 vs 0.562 (actuales); importancia baja (rank 17-53) | **No mejoran**: el momentum ya está cubierto por retornos/rolling |
+| Interpolación lineal para imputar | Riesgo de leakage (usa valores futuros) | **Rechazada**: v2 usa solo ffill (correcto) |
+| LONG-SHORT sin costes (+99.3% reportado) | Con costes realistas y walk-forward la señal colapsa a AUC ~0.54 | **No replicable**: resultado optimista por ausencia de costes |
+| Spearman (correlación no paramétrica) | Complementa a Pearson en el EDA | **Incorporada** (notebook 04) |
+| PACF (autocorrelación parcial) | Complementa a ACF | **Incorporada** (notebook 04) |
+
+**Conclusión**: la versión actual (v2) ya incorpora el rigor metodológico
+(walk-forward, costes de transacción, significancia estadística, detección de
+leakage) que la versión previa no tenía. Las técnicas evaluadas de la versión
+anterior no mejoran el rendimiento de forma significativa; se incorporaron
+solo las de valor estadístico complementario (Spearman, PACF).
+
 ## 10. Error analysis y explicabilidad (fase 18)
 
 - **Errores crecientes en el tiempo:** 2023: MAE 87 -> 2024: 205 -> 2025: 393.
