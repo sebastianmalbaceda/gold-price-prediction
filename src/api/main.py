@@ -32,6 +32,47 @@ _features: list[str] = []
 _clf = None
 _clf_pp = None
 _clf_features: list[str] = []
+_feature_ranges: dict | None = None
+
+# Rangos absolutos plausibles por tipo de variable (rechazan valores
+# físicamente imposibles sin bloquear el drift real de mercado).
+# Se aplican SOLO a variables de nivel (no a retornos, que son acotados).
+ABSOLUTE_RANGES = {
+    "us10y_yield": (-5.0, 20.0),
+    "us2y_yield": (-5.0, 20.0),
+    "dxy_index": (50.0, 200.0),
+    "dxy_future": (50.0, 200.0),
+    "vix_index": (5.0, 150.0),
+    "gold_spot": (100.0, 10000.0),
+}
+
+
+def _validate_absolute_range(features: dict[str, float], feature_list: list[str]) -> None:
+    """Rechaza valores físicamente imposibles para variables de nivel.
+
+    A diferencia de la validación por rango de train (frágil ante drift),
+    usa rangos absolutos amplios: solo bloquea errores groseros o ataques,
+    sin rechazar el drift legítimo del mercado.
+    """
+    for c in feature_list:
+        # Solo validar variables de NIVEL (sin sufijos de retorno/lag/missing)
+        if any(c.endswith(s) for s in ("_ret_lag1", "_lag1", "_missing")):
+            continue
+        r = ABSOLUTE_RANGES.get(c)
+        if r is None:
+            continue
+        v = features.get(c)
+        if v is None:
+            continue
+        lo, hi = r
+        if v < lo or v > hi:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Valor fuera de rango plausible para '{c}': {v:.2f} "
+                    f"(rango esperado [{lo}, {hi}])"
+                ),
+            )
 
 
 def _ensure_loaded():
@@ -118,6 +159,9 @@ def predict(req: PredictRequest):
     if not all(math.isfinite(v) for v in row):
         raise HTTPException(status_code=422, detail="Las features deben ser finitas (sin NaN/Inf)")
 
+    # Validar rango plausible (evita extrapolaciones absurdas)
+    _validate_absolute_range(req.features, _features)
+
     X = np.asarray([row], dtype=np.float64)
     X_scaled = _preprocessor.transform(X)
     pred = float(_model.predict(X_scaled)[0])
@@ -157,6 +201,9 @@ def predict_direction(req: PredictRequest):
         raise HTTPException(status_code=422, detail="Todas las features deben ser numéricas")
     if not all(math.isfinite(v) for v in row):
         raise HTTPException(status_code=422, detail="Las features deben ser finitas (sin NaN/Inf)")
+
+    # Validar rango plausible (evita extrapolaciones absurdas)
+    _validate_absolute_range(req.features, _clf_features)
 
     X = np.asarray([row], dtype=np.float64)
     X_scaled = _clf_pp.transform(X)

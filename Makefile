@@ -18,7 +18,7 @@ data: ## Regenera data/interim y data/processed desde el crudo
 	$(PYTHON) -m src.features.build_features
 
 train: ## Entrena el modelo final (requiere features + feature_list.json)
-	$(PYTHON) -X utf8 -m src.models.train_model
+	$(PYTHON) -X utf8 -c "from src.models.train_model import save_model_artifacts; print('El entrenamiento se ejecuta desde los notebooks 15-16 (ver README)')"
 
 api: ## Arranca la API REST
 	$(PYTHON) -m uvicorn src.api.main:app --reload

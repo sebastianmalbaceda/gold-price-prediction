@@ -269,3 +269,20 @@ def test_predict_direction_invalid_schema():
 def test_predict_direction_invalid_date():
     r = client.post("/predict_direction", json={"date": "no-es-fecha", "features": {"a": 1.0}})
     assert r.status_code in (422, 500, 503)
+
+
+def test_predict_extreme_values_rejected():
+    """Valores físicamente imposibles deben rechazarse (422)."""
+    r = client.post(
+        "/predict",
+        json={"date": "2025-01-01", "features": {"us10y_yield": 1e9}},
+    )
+    assert r.status_code in (422, 500, 503)
+
+
+def test_predict_negative_extreme_rejected():
+    r = client.post(
+        "/predict",
+        json={"date": "2025-01-01", "features": {"us10y_yield": -1e9}},
+    )
+    assert r.status_code in (422, 500, 503)

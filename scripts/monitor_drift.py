@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import pandas as pd  # noqa: E402
 from scipy.stats import ks_2samp  # noqa: E402
 
-from src.config import get_config  # noqa: E402
+from src.config import get_config, path_from_root  # noqa: E402
 from src.data.split import drop_warmup, temporal_split  # noqa: E402
 
 
@@ -29,7 +29,7 @@ def main():
     args = ap.parse_args()
 
     cfg = get_config()
-    feats = pd.read_parquet("data/processed/features.parquet")
+    feats = pd.read_parquet(path_from_root("data/processed/features.parquet"))
     feats = drop_warmup(feats, warmup=260)
     parts = temporal_split(feats, cfg)
 
@@ -54,7 +54,7 @@ def main():
         "n_drift_alerts": len(alerts),
         "alerts": alerts,
     }
-    with open("reports/drift_report.json", "w") as f:
+    with open(path_from_root("reports/drift_report.json"), "w") as f:
         json.dump(out, f, indent=2, default=float)
     print(f"Features con drift: {len(alerts)}/{len(sel_cols)}")
     for a in alerts[:15]:

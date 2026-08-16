@@ -14,6 +14,8 @@ resultante contienen NaNs y deben eliminarse (o el split debe respetarlas).
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 
@@ -90,25 +92,36 @@ def _gap_indicators(df: pd.DataFrame, exog: list[str], raw: pd.DataFrame | None)
 def build_features(
     df: pd.DataFrame, cfg: dict | None = None, raw: pd.DataFrame | None = None
 ) -> pd.DataFrame:
-    """Genera el feature set completo a partir del dataframe limpio."""
+    """Genera el feature set completo a partir del dataframe limpio.
+
+    El PerformanceWarning de pandas por fragmentación (inserción repetida
+    de columnas) se suprime: es un aviso de rendimiento, no de corrección,
+    y el DataFrame se consolida al final con una copia.
+    """
     cfg = cfg or get_config()
     f = cfg["features"]
 
-    out = df.copy()
-    out = _target_lags(out, f["target_lags"])
-    out = _target_returns(out, f["target_lags"])
-    out = _target_rolling(out, f["rolling_windows"])
-    out = _calendar_features(out)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", pd.errors.PerformanceWarning)
 
-    exog = [c for c in df.columns if c not in ("date", "gold_spot")]
-    out = _exogenous_features(out, exog, f["exogenous_lags"])
-    out = _gap_indicators(out, exog, raw)
+        out = df.copy()
+        out = _target_lags(out, f["target_lags"])
+        out = _target_returns(out, f["target_lags"])
+        out = _target_rolling(out, f["rolling_windows"])
+        out = _calendar_features(out)
 
-    # Defensa en profundidad: eliminar columnas completamente vacías
-    # (p.ej. indicadores _missing de features excluidas en versiones previas)
-    all_null = out.columns[out.isna().all()]
-    if len(all_null) > 0:
-        out = out.drop(columns=all_null)
+        exog = [c for c in df.columns if c not in ("date", "gold_spot")]
+        out = _exogenous_features(out, exog, f["exogenous_lags"])
+        out = _gap_indicators(out, exog, raw)
+
+        # Defensa en profundidad: eliminar columnas completamente vacías
+        # (p.ej. indicadores _missing de features excluidas en versiones previas)
+        all_null = out.columns[out.isna().all()]
+        if len(all_null) > 0:
+            out = out.drop(columns=all_null)
+
+        # Consolidar el DataFrame (mejora el rendimiento de acceso posterior)
+        out = out.copy()
 
     return out
 
