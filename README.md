@@ -263,10 +263,10 @@ pytest tests/ -q
 |---|---|
 | `01_problema_y_diseno.ipynb` | 0-1. Problema, contexto, diseño y reproducibilidad |
 | `02_datos_y_auditoria.ipynb` | 2-3. Obtención, licencia, ingesta y auditoría |
-| `04_eda.ipynb` | 4. EDA y dominio (target, features, TS) |
+| `04_eda.ipynb` | 4. EDA y dominio (target, features, TS, scatterplots, pairplot, outliers, Spearman, PACF) |
 | `05_target_y_metricas.ipynb` | 5-6. Target, variables, métricas y éxito |
 | `07_particion.ipynb` | 7. Partición temporal y protocolo |
-| `08_10_preprocessing_features.ipynb` | 8-10. Preprocessing, features y selección |
+| `08_10_preprocessing_features.ipynb` | 8-10. Preprocessing, features, selección (PCA, Mutual Information, clustering por correlación) |
 | `11_13_baselines_modelado.ipynb` | 11-13. Baselines, modelado y CV |
 | `14_tuning.ipynb` | 14. Hyperparameter tuning (Optuna) |
 | `15_16_seleccion_entrenamiento.ipynb` | 15-16. Selección y entrenamiento final |
