@@ -133,6 +133,32 @@ y split. RandomForest calibrado (isotónico, CV interna).
   cerca del óptimo para P~0.54).
 - Artefactos: `models/direction_classifier.joblib`, endpoint `/predict_direction`.
 
+## 9c-dl. Extension de deep learning (fase 16c)
+
+Se compararon dos arquitecturas neuronales sobre el mismo split temporal y
+las mismas 109 features: una MLP tabular y una GRU causal de 21 dias.
+El entrenamiento utiliza AdamW, dropout, weight decay, clipping de gradiente
+y early stopping basado exclusivamente en AUC de validation. El dispositivo
+se detecta automaticamente; la ejecucion registrada uso CUDA en una NVIDIA
+GeForce RTX 3050 Ti Laptop GPU.
+
+| Modelo | Train AUC | Validation AUC | Test AUC |
+|---|---:|---:|---:|
+| MLP | 0.691 | 0.544 | 0.538 |
+| GRU | 0.603 | 0.529 | 0.528 |
+
+La MLP es la mejor por validation, pero no supera al RandomForest regularizado
+(AUC test aproximadamente 0.57 en el experimento no calibrado y 0.552 en el
+artefacto calibrado). Por tanto, deep learning se incorpora como experimento
+reproducible y comparativo, no como sustituto del modelo operativo. Los
+resultados no justifican aumentar la complejidad: con 5.700 observaciones y
+señal financiera debil, la red aprende patrones limitados y conserva un gap
+train-test apreciable.
+
+El notebook guarda el dispositivo, la semilla, el mejor epoch, los pesos y
+los metadatos. Los pesos `.pt` no se versionan por git; pueden regenerarse
+ejecutando el notebook con `requirements-dl.txt`.
+
 ## 9d. ¿Es rentable? Backtest y significancia (fase 17b)
 
 **Acierto por clase (test, umbral 0.5):** TPR (acierta subidas) = 83.4%,

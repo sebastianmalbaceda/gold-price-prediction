@@ -1,0 +1,27 @@
+{
+  "device": {
+    "device": "cuda",
+    "cuda_available": true,
+    "cuda_version": "12.8",
+    "device_count": 1,
+    "device_name": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+    "torch_version": "2.11.0+cu128"
+  },
+  "comparison": [
+    {
+      "model": "MLP",
+      "train_auc": 0.691141714300629,
+      "val_auc": 0.5440898345153665,
+      "test_auc": 0.5379021652240434,
+      "device": "cuda"
+    },
+    {
+      "model": "GRU",
+      "train_auc": 0.6029668721859516,
+      "val_auc": 0.5291174152876281,
+      "test_auc": 0.5280602377534619,
+      "device": "cuda"
+    }
+  ],
+  "selected_by_validation": "MLP"
+}

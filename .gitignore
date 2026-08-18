@@ -13,6 +13,7 @@ data/processed/
 models/*.joblib
 models/*.pkl
 models/*.json
+models/*.pt
 !models/.gitkeep
 
 # Entorno virtual

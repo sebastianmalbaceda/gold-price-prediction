@@ -1,0 +1,6 @@
+# Dependencia opcional para notebooks de deep learning.
+# CPU o instalacion generica:
+torch>=2.2.0,<3.0.0
+
+# Para NVIDIA/CUDA, instalar en su lugar:
+# pip install --index-url https://download.pytorch.org/whl/cu128 torch

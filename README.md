@@ -126,6 +126,22 @@ es **lo mejor posible con estos datos**, y lo mejor posible es una señal
 modesta. Uso práctico recomendado: **indicador de riesgo** (reducir
 exposición cuando P<0.5, alertas), no estrategia de trading.
 
+### Extension de deep learning (fase 16c)
+
+El notebook `16c_deep_learning_clasificacion.ipynb` compara una MLP tabular y
+una GRU causal con el clasificador clasico. La ejecucion detecta CUDA y usa
+la GPU NVIDIA disponible; en entornos sin CUDA utiliza CPU automaticamente.
+
+| Modelo | Validation AUC | Test AUC | Dispositivo observado |
+|---|---:|---:|---|
+| MLP | 0.544 | 0.538 | CUDA |
+| GRU | 0.529 | 0.528 | CUDA |
+
+La MLP gana por validation, pero no supera al RandomForest regularizado de la
+fase 17c. Por rigor, se conserva como experimento DL y no reemplaza el modelo
+operativo. Instalar con `pip install -r requirements-dl.txt` o
+`pip install -e .[dl]`.
+
 ### Predicción de volatilidad y gestión de riesgo (fase 17d)
 
 La **volatilidad** es mucho más predecible que la dirección (autocorrelación
@@ -271,6 +287,7 @@ pytest tests/ -q
 | `14_tuning.ipynb` | 14. Hyperparameter tuning (Optuna) |
 | `15_16_seleccion_entrenamiento.ipynb` | 15-16. Selección y entrenamiento final |
 | `16_direccion_clasificacion.ipynb` | **16b. Verificación de generalización + clasificación de dirección (sube/baja)** |
+| `16c_deep_learning_clasificacion.ipynb` | **16c. Deep learning opcional: MLP y GRU con CUDA/CPU** |
 | `17b_acierto_y_backtest.ipynb` | **17b. Acierto por clase, backtest de rentabilidad y significancia estadística** |
 | `17c_robustez_direccion.ipynb` | **17c. Verificación de robustez (overfitting/underfitting), walk-forward y régimen** |
 | `17d_volatilidad_riesgo.ipynb` | **17d. Predicción de volatilidad y position sizing (gestión de riesgo)** |

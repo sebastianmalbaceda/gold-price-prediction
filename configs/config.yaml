@@ -80,3 +80,22 @@ model:
 api:
   host: "127.0.0.1"
   port: 8000
+
+deep_learning:
+  enabled: true
+  device: auto
+  seed: 42
+  lookback: 21
+  epochs: 120
+  batch_size: 128
+  patience: 20
+  mlp:
+    dropout: 0.30
+    learning_rate: 0.001
+    weight_decay: 0.001
+    hidden_layers: [128, 64]
+  gru:
+    hidden_size: 64
+    dropout: 0.25
+    learning_rate: 0.0008
+    weight_decay: 0.001
