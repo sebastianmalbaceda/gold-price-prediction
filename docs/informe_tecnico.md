@@ -8,7 +8,7 @@
 
 **Horizontes:** h en {1, 5, 21} días hábiles. **Unidad:** día hábil (COMEX/NYMEX).
 
-**Entrada en t:** precio del oro y 59 exógenas en t y pasadas (nunca futuras).
+**Entrada en t:** precio del oro y las exógenas disponibles; el fichero crudo contiene 59 y el conjunto limpio conserva 25 antes de la ingeniería (nunca se usan valores futuros).
 
 **Decisión que apoya:** referencia de nivel para sizing/stress testing; NO trading automático.
 
@@ -19,9 +19,9 @@
 - **Auditoría (fases 2-3):**
   - Cobertura desigual: la mayoría de series empiezan a mitad del s. XX; `gold_spot` desde 1979-12-27.
   - 12,963 filas de fin de semana (28.6%) sin cotización -> eliminadas.
-  - 40+ features con cobertura < 5% en 2000+ (CPI, PIB, M2, google_trends...) -> excluidas en `config.yaml`.
+  - 40+ features con cobertura baja en 2000+ (CPI, PIB, M2, google_trends...) -> excluidas en `config.yaml`.
   - Huecos de ~31 días en macro (CPI, paro) -> forward-fill (solo pasado).
-- **Ventana de trabajo:** 2000-01-01 -> 2025-09-12, 6,705 días hábiles, 42 columnas tras limpieza.
+- **Ventana de trabajo:** 2000-01-01 -> 2025-09-12, 6,705 días hábiles, 27 columnas tras limpieza.
 
 ## 3. EDA (fase 4)
 
@@ -35,7 +35,7 @@
 
 | Conjunto | Periodo | Filas | Uso |
 |---|---|---|---|
-| Train | 2000-01 -> 2019-12 | 4,956 | aprender todo |
+| Train | 2000-01 -> 2019-12 | 4,957 | aprender todo |
 | Validation | 2020-01 -> 2022-12 | 783 | selección/tuning |
 | Test | 2023-01 -> 2025-09 | 684 | **bloqueado**, 1 sola vez |
 
@@ -47,7 +47,7 @@
 
 - Limpieza: días hábiles, ffill exógenas (solo pasado), exclusión por cobertura.
 - Escalado: **RobustScaler (5-95%) ajustado SOLO con train**, aplicado con `transform` a val/test.
-- Features (146 brutas -> **85 finales** tras filtro de redundancia |rho|>0.98 con prioridad a niveles):
+- Features (128 columnas derivadas -> **83 finales** tras filtro de redundancia |rho|>0.98 con prioridad a niveles):
   - Lags del target: 1, 2, 3, 5, 10, 21.
   - Retornos log del target a esos lags.
   - Rolling: retorno, media, desv. a 5/21/63/126 días.
@@ -60,9 +60,9 @@
 | Baseline | CV MAE | sMAPE |
 |---|---|---|
 | Naive (último valor conocido) | 287.2 | 25.7% |
-| Ridge | 108.3 | 10.5% |
-| RandomForest | 228.5 | 22.5% |
-| XGBoost | 220.0 | 21.8% |
+| Ridge | 122.9 | 13.2% |
+| RandomForest | 222.8 | 22.2% |
+| XGBoost | 202.5 | 20.6% |
 
 Nota: el naive de CV usa el último valor del fold (1-2 años antes) -> MAE alto.
 En test, el naive usa el último valor de train+val (2022) -> MAE 879.
@@ -71,61 +71,58 @@ En test, el naive usa el último valor de train+val (2022) -> MAE 879.
 
 - Familias: Ridge, RandomForest, XGBoost, LightGBM, CatBoost.
 - **Optuna (TPE, 77 trials totales)** con TimeSeriesSplit, optimizando MAE medio.
-- Resultados CV: **Ridge MAE 55.1** (alpha~0.002) vs RF 227 / XGB 199 / LGBM 197 / Cat 227.
+- Resultados CV: **Ridge MAE 70.0** (alpha~0.002) vs RF 212.1 / XGB 196.8 / LGBM 191.3 / Cat 220.6.
 - Los árboles no extrapolan niveles no estacionarios (R^2 negativo en validation); el modelo lineal captura tendencia + lags.
 
 ## 8. Selección y entrenamiento final (fases 15-16)
 
-- **Validation (2020-2022):** Ridge MAE=37.0, RMSE=46.2, sMAPE=2.07%, R^2=0.794, DA=48.7%.
-  RF/XGB/LGBM/Cat: MAE 199-297, R^2 negativo -> descartados.
-- **Decisión:** Ridge con alpha=0.0022, 85 features, RobustScaler.
-- Reentrenado con train+val (5,739 filas). Artefactos: `models/final_model.joblib`, `preprocessor.joblib`, `feature_list.json`.
+- **Validation (2020-2022):** Ridge MAE=60.4, RMSE=72.5, sMAPE=3.44%, R^2=0.493, DA=47.4%.
+  RF/XGB/LGBM/Cat: MAE 212.9-282.5 y R^2 negativo -> descartados.
+- **Decisión:** Ridge con alpha=0.0022, 83 features, RobustScaler.
+- Reentrenado con train+val (5,740 filas). Artefactos: `models/final_model.joblib`, `preprocessor.joblib`, `feature_list.json`.
 
 ## 9. Evaluación final en test (fase 17)
 
 | Métrica | Valor |
 |---|---|
-| MAE | **204.70 USD/oz** |
-| RMSE | 242.18 USD/oz |
-| sMAPE | **8.29%** |
-| R^2 | **0.7569** |
-| Directional Accuracy | 47.4% |
-| vs Naive | **-76.8% MAE** |
+| MAE | **99.75 USD/oz** |
+| RMSE | 125.08 USD/oz |
+| sMAPE | **3.94%** |
+| R^2 | **0.9352** |
+| Directional Accuracy | 46.1% |
+| vs Naive congelado | **-88.7% MAE** |
 
 ## 9b. Verificación fuerte de generalización (fase 16b)
 
 **¿Overfitting o underfitting?** Diagnóstico con 4 pruebas:
 
-1. **Gap train/val/test**: MAE train=14.7, val=21.5, test=204.7. El gap
-train->val es pequeño (14.7->21.5) -> **sin overfitting severo**. El salto a
-test (204.7) se explica por **drift de régimen** (2023-25: rally histórico).
-2. **Learning curve (CV temporal)**: el MAE de validación NO empeora
-sistemáticamente al crecer train (15->42->89->58->42) -> **no hay overfitting**;
-el modelo se beneficia de más datos.
-3. **Gap por familia**: Ridge gap=23, RF gap=264, XGB gap=200 -> Ridge es la
-familia con **menor overfitting**, coherente con su victoria en selección.
-4. **vs naive-persistencia** (`gold_spot(t)`): naive MAE=17.6 vs modelo
-204.7 en test -> **el modelo NO supera a "mañana = hoy" en h=1**.
+1. **Gap train/val/test**: MAE train=15.2, val=24.9, test=99.7. El salto temporal
+se explica por drift de régimen y no implica por sí solo sobreajuste.
+2. **Learning curve (validación fija)**: la validación baja de 256.6 a 60.4 al
+añadir historia, aunque permanece la variabilidad temporal.
+3. **Persistencia diaria**: naive MAE=17.6 frente a Ridge MAE=99.7 en test ->
+**el modelo NO supera a "mañana = hoy" en h=1**; su valor es descriptivo para
+niveles y tendencia.
 
-**Conclusión técnica**: el R^2 alto (0.998 train / 0.757 test) mide el
-seguimiento de la **tendencia**, no la precisión del cambio diario. En un
-mercado eficiente, el cambio a 1 día es ruido: ningún modelo con datos
-públicos lo supera de forma consistente. El modelo de regresión es útil
+**Conclusión técnica**: el R^2 alto (0.998 train / 0.935 test) mide el
+seguimiento del nivel y parte de la tendencia, no una capacidad fiable de
+timing diario. El cambio a 1 día sigue siendo difícil de predecir. El modelo de regresión es útil
 como **referencia de nivel/tendencia**, no para timing.
 
 ## 9c. Clasificador de dirección (sube/baja) - fase 16b
 
 Modelo binario: `y_dir = 1 si gold(t+h) > gold(t)`, con las mismas features
-y split. RandomForest calibrado (isotónico, CV interna).
+y split. La tabla siguiente muestra el RF no calibrado como diagnóstico; el
+artefacto desplegado se calibra con isotonic y h=1.
 
 | Horizonte | CV AUC | Test AUC | Test ACC | P(sube) test |
 |---|---|---|---|---|
-| h=1 | 0.528 | **0.552** | 0.551 | 0.537 |
-| h=5 | 0.532 | 0.511 | 0.586 | 0.573 |
-| h=21 | 0.571 | 0.535 | 0.689 | 0.677 |
+| h=1 | 0.529 | **0.573** | 0.558 | 0.537 |
+| h=5 | 0.528 | 0.534 | 0.570 | 0.573 |
+| h=21 | 0.584 | 0.509 | 0.484 | 0.677 |
 
-- h=1 desplegado: **AUC=0.552, ACC=0.551, recall=0.790, PR-AUC=0.585, Brier=0.247**.
-- Señal débil pero real (AUC > 0.5 de forma consistente en CV y test).
+- Diagnóstico no calibrado h=1: AUC=0.573, ACC=0.558. El artefacto desplegado calibrado obtiene **AUC=0.532, ACC=0.539, recall=0.984, PR-AUC=0.576, Brier=0.247**.
+- Señal débil e inestable: el walk-forward medio es AUC=0.526 +/- 0.043.
 - Features más informativas: momentum (`gold_ret_lag1`, `gold_ret_roll63`)
   y riesgo (`geopolitical_risk`, `policy_uncertainty`, `usdinr_exchange_ret_lag1`).
 - **Interpretación**: inclinación leve (para alertas/sizing marginal), NO
@@ -136,7 +133,7 @@ y split. RandomForest calibrado (isotónico, CV interna).
 ## 9c-dl. Extension de deep learning (fase 16c)
 
 Se compararon dos arquitecturas neuronales sobre el mismo split temporal y
-las mismas 109 features: una MLP tabular y una GRU causal de 21 dias.
+las mismas 83 features: una MLP tabular y una GRU causal de 21 dias.
 El entrenamiento utiliza AdamW, dropout, weight decay, clipping de gradiente
 y early stopping basado exclusivamente en AUC de validation. El dispositivo
 se detecta automaticamente; la ejecucion registrada uso CUDA en una NVIDIA
@@ -144,84 +141,81 @@ GeForce RTX 3050 Ti Laptop GPU.
 
 | Modelo | Train AUC | Validation AUC | Test AUC |
 |---|---:|---:|---:|
-| MLP | 0.691 | 0.544 | 0.538 |
-| GRU | 0.603 | 0.529 | 0.528 |
+| MLP | 0.649 | 0.550 | 0.534 |
+| GRU | 0.569 | 0.543 | 0.510 |
 
 La MLP es la mejor por validation, pero no supera al RandomForest regularizado
-(AUC test aproximadamente 0.57 en el experimento no calibrado y 0.552 en el
-artefacto calibrado). Por tanto, deep learning se incorpora como experimento
+(AUC test 0.560) ni al clasificador calibrado de referencia (AUC 0.532). Por tanto, deep learning se incorpora como experimento
 reproducible y comparativo, no como sustituto del modelo operativo. Los
-resultados no justifican aumentar la complejidad: con 5.700 observaciones y
+resultados no justifican aumentar la complejidad: con 5.740 observaciones y
 señal financiera debil, la red aprende patrones limitados y conserva un gap
 train-test apreciable.
 
 El notebook guarda el dispositivo, la semilla, el mejor epoch, los pesos y
 los metadatos. Los pesos `.pt` no se versionan por git; pueden regenerarse
-ejecutando el notebook con `requirements-dl.txt`.
+ejecutando el notebook con las dependencias de `requirements.txt`.
 
 ## 9d. ¿Es rentable? Backtest y significancia (fase 17b)
 
-**Acierto por clase (test, umbral 0.5):** TPR (acierta subidas) = 83.4%,
-TNR (acierta bajadas) = 23.7%. El modelo está sesgado a predecir sube
-(80% de las veces) por el desbalance (P(sube)=54%) y el umbral 0.5.
-Subir el umbral mejora precisión: 0.55 -> 59%, 0.60 -> 67%.
+**Acierto por clase (test, umbral 0.5):** TPR = 98.4% y TNR = 2.5%. El modelo
+calibrado predice sube el 98% de las veces; el umbral 0.55 reduce operaciones,
+pero la estrategia solo obtiene +2.4% en este test.
 
 **Backtest (retorno hoy->mañana, costes 0.1%/operación):**
 
 | Estrategia | Retorno | Sharpe | vs Buy&Hold |
 |---|---|---|---|
 | Buy & hold | +82.9% | - | - |
-| LONG filtrado (clf calibrado, thr 0.5) | +74.4% | 1.63 | -8.5 pp |
-| LONG filtrado (RF profundo, thr 0.51) | +48.7% | 1.60 | -34 pp |
+| LONG filtrado (clasificador calibrado, thr 0.5) | +85.2% | 1.60 | +2.3 pp |
+| LONG filtrado (clasificador calibrado, thr 0.55) | +2.4% | 0.31 | -80.5 pp |
+| LONG filtrado (RF profundo, thr 0.53) | +28.0% | 1.24 | -54.9 pp |
 | LONG-SHORT (thr 0.5) | -90.8%* | -5.78 | -174 pp |
 
 *El LONG-SHORT con el clasificador calibrado usaba el retorno desfasado
 (ayer->hoy); con el retorno correcto no se reproduce en el notebook 17b.
 
 **Significancia:**
-- AUC test (RF profundo) = 0.571; IC95% bootstrap = [0.456, 0.545] (roza 0.5).
-- Permutación: p < 0.001 (señal real en test).
-- CV temporal: AUC medio ~ 0.516 -> **señal inestable fuera de test**.
-- t-test estrategia vs buy&hold: p = 0.25 -> **no rentable de forma robusta**.
+- AUC test (RF profundo) = 0.533; IC95% bootstrap = [0.490, 0.574] (incluye 0.5).
+- CV temporal: AUC medio 0.526 +/- 0.043 -> **señal inestable fuera de test**.
+- t-test estrategia vs buy&hold: p = 0.079 -> **no significativa al 5%**.
 
 **Conclusión final**: la dirección del oro a 1 día tiene señal **débil y no
-explotable** de forma fiable: el clasificador acierta mejor que el azar y su
-confianza es informativa (P(sube|pred) 64-77% en los extremos), pero en
-backtest no supera a comprar y mantener. La rentabilidad a largo plazo de
+explotable** de forma fiable: el AUC calibrado es 0.532 y su intervalo no
+confirma ventaja sobre el azar. En backtest no supera de forma robusta a
+comprar y mantener. La rentabilidad a largo plazo de
 una estrategia de tendencia con estos datos no está demostrada; el valor
 real está en la gestión de riesgo (alertas, sizing), no en el timing.
 
 ## 9e. Verificación de robustez (fase 17c)
 
 **¿Overfitting?** El modelo original (RF depth=8) sobreajustaba: train AUC
-0.91 vs test 0.56 (gap 0.35). El RF profundo aún más (gap 0.43). Con
-regularización fuerte (depth=4, leaf=20) el gap baja a **0.126** manteniendo
-test AUC=0.569. La learning curve confirma que el gap se reduce al crecer
-train (0.29->0.19), típico de overfitting controlable con regularización.
+0.907 vs test 0.574 (gap 0.334). El RF profundo alcanza gap 0.467. Con
+regularización fuerte (depth=4, leaf=20) el gap baja a **0.124** y el test AUC
+es 0.560. La learning curve reduce el gap de 0.301 a 0.187.
 
-**¿Underfitting?** No: submuestrear train empeora el test AUC (0.537 con
-30% vs 0.557 con 100%). El modelo captura la señal disponible.
+**¿Underfitting?** No se observa una red demasiado simple; la señal sigue siendo
+débil y dependiente del régimen.
 
 **Walk-forward 2019-2025** (reentrenamiento anual, ventana 5 años):
 
 | Año eval | AUC | Estrategia | Buy&Hold |
 |---|---|---|---|
-| 2019 | 0.550 | +4.1% | +18.3% |
-| 2020 | 0.522 | +2.6% | +25.1% |
-| 2021 | 0.501 | -8.3% | -5.1% |
-| 2022 | 0.482 | -7.7% | +1.3% |
-| 2023 | 0.514 | +4.5% | +13.2% |
-| 2024 | 0.545 | +11.7% | +27.1% |
-| 2025 | 0.656 | +31.6% | +27.1% |
+| 2019 | 0.527 | -4.0% | +18.3% |
+| 2020 | 0.526 | +13.0% | +25.1% |
+| 2021 | 0.482 | -10.6% | -5.1% |
+| 2022 | 0.488 | -7.2% | +1.3% |
+| 2023 | 0.514 | +3.6% | +13.2% |
+| 2024 | 0.533 | +8.2% | +27.1% |
+| 2025 | 0.613 | +32.8% | +27.1% |
 
-- AUC medio **0.539 +/- 0.057**; solo 2025 supera claramente 0.55.
+- AUC medio **0.526 +/- 0.043**; solo 2025 supera 0.55.
 - La estrategia gana a buy&hold solo en 2025 (mercado con tendencia fuerte).
-- Por régimen: alcista AUC=0.548, bajista 0.438, lateral 0.484 -> la señal
+- Por régimen: alcista AUC=0.538, bajista 0.448, lateral 0.474 -> la señal
 de momentum es condicional al régimen.
 
 **Conclusión de robustez**: el modelo regularizado es **lo mejor posible con
 estos datos** (sin memorizar, sin ser trivial): señal real pero débil
-(AUC ~0.54). Su uso práctico honesto es como **indicador de riesgo**
+(AUC walk-forward ~0.526). Su uso práctico honesto es como **indicador de riesgo**
 (reducir exposición cuando P<0.5, alertas), no como fuente de rentabilidad
 superior a comprar y mantener.
 
@@ -235,9 +229,9 @@ La volatilidad es un proceso con **autocorrelación muy alta** (lag-1 = 0.985,
 | Modelo | MAE (vol anualizada) | R^2 |
 |---|---|---|
 | Naive (vol actual) | 0.0553 | -0.212 |
-| **RF volatilidad** | **0.0510** | **+0.058** |
+| **RF volatilidad** | **0.0463** | **+0.241** |
 
-El modelo supera al naive (+7.9% MAE) y captura los picos de 2024-25.
+El modelo supera al naive (+16.2% MAE) y captura los picos de 2024-25.
 
 **Position sizing por volatilidad** (exposición = min(1, vol_objetivo/vol_prevista),
 con vol_objetivo = 12% anualizado):
@@ -245,9 +239,9 @@ con vol_objetivo = 12% anualizado):
 | Estrategia | Retorno | Sharpe | Max DD | Exposición |
 |---|---|---|---|---|
 | Buy & hold | +86.4% | 1.61 | -11.3% | 100% |
-| **Sizing vol** | +76.8% | **1.88** | **-10.3%** | 80.7% |
+| **Sizing vol** | +73.2% | **1.83** | **-10.9%** | 81.6% |
 
-La gestión de riesgo basada en volatilidad **mejora el Sharpe (1.88 vs 1.61)
+La gestión de riesgo basada en volatilidad **mejora el Sharpe (1.83 vs 1.61)
 y reduce el drawdown** con menos exposición: es la extensión con mayor valor
 práctico del proyecto, coherente con la literatura cuantitativa
 (volatility targeting).
@@ -266,12 +260,12 @@ práctico del proyecto, coherente con la literatura cuantitativa
 **Lookahead bias**: las macro se actualizan el **día 1 del mes** en el dataset
 (P10=P90=1), pero su publicación real es 5-30 días después (BLS: CPI día 10-15;
 BEA: PIB ~30 días). El ffill rellena huecos pero no corrige el adelanto.
-Impacto medido: AUC +0.003 (las macro adelantadas aportan poco; la señal
-principal es el momentum del oro). Corrección propuesta: `PUBLICATION_LAG`.
+Impacto medido: AUC +0.000 en el conjunto actual porque las macro de baja cobertura
+se excluyen antes del modelado; el riesgo de publicación anticipada queda documentado.
 
-**Multicolinealidad (VIF)**: 24/110 features con VIF>10 (us_gdp 79.9,
-sp500_futures 73.3, usdcny 72.0, gold_spot_lag21 60.9). Esperable por los
-lags del mismo activo; el modelo Ridge (L2) y los árboles la toleran.
+**Multicolinealidad (VIF)**: 37/83 features con VIF>10 (commodities_bloomberg 206.7,
+commodities_crb 177.8, gold_spot_lag21 176.9). Es esperable por los lags del
+mismo activo; Ridge (L2) y los árboles la toleran.
 
 **Rango de fechas**: ventana 2000-2025 con cobertura 100% tras warm-up;
 antes de 2000 las series no existen. El rango es óptimo y está justificado.
@@ -284,7 +278,7 @@ valor sobre el pipeline actual:
 
 | Técnica de la versión previa | Resultado en v2 | Decisión |
 |---|---|---|
-| Voting/Ensemble (RF+XGB+LR) | CV AUC 0.532 vs 0.529 (RF actual); test 0.546 vs 0.552 | **No mejora**: señal demasiado débil para que el ensemble aporte |
+| Voting/Ensemble (RF+XGB+LR) | Experimento previo no comparable tras la auditoria de cobertura | **No se incorpora**: la señal es demasiado débil para justificar complejidad |
 | Mutual Information (selección) | Top features MI coinciden con importancia RF (retornos FX y momentum) | **Sin features ocultas**: el pipeline actual ya las captura |
 | Features técnicas (RSI, MA50/200, vol21) | AUC 0.557 vs 0.562 (actuales); importancia baja (rank 17-53) | **No mejoran**: el momentum ya está cubierto por retornos/rolling |
 | Interpolación lineal para imputar | Riesgo de leakage (usa valores futuros) | **Rechazada**: v2 usa solo ffill (correcto) |
@@ -300,16 +294,16 @@ solo las de valor estadístico complementario (Spearman, PACF).
 
 ## 10. Error analysis y explicabilidad (fase 18)
 
-- **Errores crecientes en el tiempo:** 2023: MAE 87 -> 2024: 205 -> 2025: 393.
+- **Errores crecientes en el tiempo:** 2023: MAE 41.4 -> 2024: 99.7 -> 2025: 193.4.
 - Peores errores: abril-mayo 2025 (oro 2,750->3,430; el modelo predecía ~2,800) - rallies extremos no capturados.
-- SHAP (Ridge): `gold_spot_lag21` domina (281.7), luego `gold_ret_roll21` (22.7), `silver_spot` (20.7), `sp500_futures` (10.2), `consumer_confidence` (8.2), `us_gdp` (6.5), tipos (6.3).
-- Incertidumbre: bootstrap (100 fits) -> intervalo P5-P95 de 33.5 USD de ancho pero cobertura solo del 1% en test -> **mal calibrada**; la volatilidad real excede la paramétrica. Para producción: usar cuantiles/volatilidad GARCH o conformal prediction.
+- SHAP (Ridge): `gold_spot_lag21` domina (338.4), luego `gold_ret_roll21` (26.7), `silver_spot` (14.1), `commodities_crb` (3.3) y `quarter` (3.0).
+- Incertidumbre: bootstrap (100 fits) -> intervalo P5-P95 de 26.4 USD de ancho y cobertura ~5% en test -> **mal calibrada**; la volatilidad real excede la paramétrica. Para producción: usar cuantiles/volatilidad GARCH o conformal prediction.
 
 ## 11. Robustez (fase 19)
 
 - KS-test train+val vs test: **drift significativo en todas las features clave** (DXY, tipos, plata, USD/JPY... p<0.01).
 - Degradación temporal documentada (sección 10).
-- Pruebas de entrada: la API valida esquema/tipos/NaN (422/503); tests pytest 9/9 OK.
+- Pruebas de entrada: la API valida esquema/tipos/NaN, rangos, fechas y readiness (422/503); 37 tests y validación estructural de notebooks.
 
 ## 12. Ética, privacidad y seguridad (fase 20)
 

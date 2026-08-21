@@ -24,22 +24,7 @@
     "commodities_bloomberg": 1.0,
     "commodities_crb": 1.0,
     "credit_spread": 1.0,
-    "sp500_futures": 1.0,
-    "us_financial_stress_index": 5.0,
-    "us_industrial_production": 23.0,
-    "us_cpi": 23.0,
-    "us_unemployment": 23.0,
-    "fed_funds": 23.0,
-    "us_personal_saving_rate": 23.0,
-    "us_m2": 23.0,
-    "us_consumer_sentiment": 23.0,
-    "consumer_confidence": 23.0,
-    "fx_reserves_china": 23.0,
-    "us10y_real": 23.0,
-    "copper_spot": 23.0,
-    "export_price_index": 23.0,
-    "us_retail_sales": 23.0,
-    "us_gdp": 1.0
+    "sp500_futures": 1.0
   },
   "lookahead": {
     "us_cpi_dia_actualizacion": 1.0,
@@ -58,24 +43,24 @@
       "fx_reserves_china": 30,
       "us_personal_saving_rate": 30
     },
-    "impacto_auc": 0.003094405143588941,
-    "auc_con_macro": 0.5692244217330388,
-    "auc_sin_macro": 0.5661300165894498
+    "impacto_auc": 0.0,
+    "auc_con_macro": 0.5604397493531834,
+    "auc_sin_macro": 0.5604397493531834
   },
   "multicolinealidad": {
-    "n_vif_gt_10": 24,
-    "n_vif_gt_5": 33,
+    "n_vif_gt_10": 37,
+    "n_vif_gt_5": 51,
     "top_vif": {
-      "policy_uncertainty_missing": Infinity,
-      "commodities_bloomberg": 230.04348078371424,
-      "fx_reserves_china": 229.70425532285708,
-      "commodities_crb": 178.43987815436714,
-      "eurusd_exchange": 99.42224335574427,
-      "us_gdp": 79.86236900719014,
-      "sp500_futures": 73.27687532691944,
-      "usdcny_exchange": 72.0286642867131,
-      "gold_spot_lag21": 60.872949633296564,
-      "us_unemployment": 37.734738617844755
+      "commodities_bloomberg": 206.7398065768205,
+      "commodities_crb": 177.846174534358,
+      "gold_spot_lag21": 176.8691183891616,
+      "year": 146.71351752970995,
+      "dxy_index": 144.15857743237714,
+      "eurusd_exchange": 107.53773882168475,
+      "sp500_futures": 73.90395754737582,
+      "usdcny_exchange": 39.5008811009443,
+      "usdinr_exchange": 35.96617242662507,
+      "platinum_spot": 35.40773474389764
     }
   },
   "cobertura": {
@@ -105,5 +90,5 @@
     "2024": 1.0,
     "2025": 1.0
   },
-  "conclusion": "Lookahead bias detectado en macro (CPI d\u00eda 1, etc.). Impacto peque\u00f1o (+0.008 AUC). Multicolinealidad esperable (24/110 VIF>10), tolerada por Ridge/RF. Ventana 2000-2025 con cobertura completa."
+  "conclusion": "Impacto medido del posible lookahead macro: +0.0000 AUC. Multicolinealidad: 37/83 features con VIF > 10; tolerada por Ridge/RF. Ventana 2000-2025."
 }

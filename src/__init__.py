@@ -2,7 +2,7 @@
 Gold Price Prediction - paquete fuente.
 
 Serie temporal financiera: predicción del precio spot del oro (gold_spot)
-con 60 variables exógenas (tipos, FX, materias primas, macro, sentimiento).
+con 59 variables exógenas (tipos, FX, materias primas, macro, sentimiento).
 
 Estructura:
     src/config.py       - carga de configuraciones YAML

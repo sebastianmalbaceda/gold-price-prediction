@@ -19,6 +19,13 @@ Documentación interactiva (OpenAPI): http://127.0.0.1:8000/docs
 {"status": "ok", "model": "gold_spot"}
 ```
 
+### `GET /ready`
+```json
+{"status": "ready", "model": "gold_spot"}
+```
+Devuelve `503` si faltan o son invalidos los artefactos de regresion o
+clasificacion. `/health` solo comprueba liveness.
+
 ### `POST /predict` - regresión de nivel
 
 **Request**
@@ -34,7 +41,7 @@ Documentación interactiva (OpenAPI): http://127.0.0.1:8000/docs
 }
 ```
 - `date`: fecha (YYYY-MM-DD) del momento de predicción.
-- `features`: **todas** las features del modelo (lista en `models/feature_list.json`, 110 columnas).
+- `features`: **todas** las features del modelo (lista en `models/feature_list.json`, 83 columnas).
 
 **Response 200**
 ```json
@@ -42,7 +49,7 @@ Documentación interactiva (OpenAPI): http://127.0.0.1:8000/docs
   "date": "2025-08-14",
   "horizon_days": 1,
   "prediction_usd_per_oz": 2968.35,
-  "model_version": "1.0.0"
+  "model_version": "1.1.0"
 }
 ```
 
@@ -58,7 +65,7 @@ oro suba en t+1 y la dirección con umbral 0.5.
   "horizon_days": 1,
   "probability_up": 0.5371,
   "direction": "up",
-  "model_version": "1.0.0"
+  "model_version": "1.1.0"
 }
 ```
 
@@ -77,7 +84,9 @@ oro suba en t+1 y la dirección con umbral 0.5.
 - Esquema Pydantic estricto (`PredictRequest`).
 - El servidor verifica que el conjunto de features coincida exactamente con
   `models/feature_list.json` (mismo orden que entrenamiento).
-- Rechaza NaNs, Inf, claves extra y fechas malformadas con mensaje descriptivo.
+- Rechaza NaNs, Inf, claves extra, rangos fisicamente imposibles y fechas que no cumplen `YYYY-MM-DD`.
+- Los artefactos joblib deben proceder de una fuente confiable; su carga es una deserializacion de Python.
+- En despliegues publicos se requiere autenticacion, rate limiting y TLS fuera de esta API academica.
 
 ## Compatibilidad entrenamiento/servicio
 La API carga los artefactos serializados (`final_model.joblib`, `preprocessor.joblib`,

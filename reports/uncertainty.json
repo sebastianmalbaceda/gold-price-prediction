@@ -1,5 +1,5 @@
 {
-  "coverage_p5_p95": 0.011695906432748537,
-  "mean_interval_width": 34.41047864125717,
+  "coverage_p5_p95": 0.049707602339181284,
+  "mean_interval_width": 26.41646044677628,
   "method": "bootstrap 100 fits Ridge"
 }

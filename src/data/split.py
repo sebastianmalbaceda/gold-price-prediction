@@ -1,11 +1,10 @@
-"""División temporal estricta y TimeSeriesSplit (fase 7).
-
-Para forecasting: orden temporal estricto, nunca datos aleatorios.
-Train 2000-2019 | Val 2020-2022 | Test 2023-2025 (configurado en config.yaml).
-"""
+"""Division temporal estricta y TimeSeriesSplit (fase 7)."""
 
 from __future__ import annotations
 
+import numbers
+
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 
@@ -13,55 +12,84 @@ from src.config import get_config, get_params
 
 
 def temporal_split(df: pd.DataFrame, cfg: dict | None = None) -> dict[str, pd.DataFrame]:
-    """Divide por fechas según config: train/val/test (orden temporal estricto)."""
+    """Divide por fechas según config, sin aleatoriedad ni solapamientos."""
     cfg = cfg or get_config()
-    s = cfg["split"]
-    train = df[(df["date"] >= s["train"][0]) & (df["date"] <= s["train"][1])]
-    val = df[(df["date"] >= s["val"][0]) & (df["date"] <= s["val"][1])]
-    test = df[(df["date"] >= s["test"][0]) & (df["date"] <= s["test"][1])]
-    return {
-        "train": train.reset_index(drop=True),
-        "val": val.reset_index(drop=True),
-        "test": test.reset_index(drop=True),
-    }
+    if "date" not in df.columns:
+        raise ValueError("El dataframe debe contener la columna 'date'")
+    if df.empty:
+        raise ValueError("No se puede dividir un dataframe vacio")
+
+    dates = pd.to_datetime(df["date"], errors="coerce")
+    if dates.isna().any() or dates.duplicated().any():
+        raise ValueError("date debe contener fechas validas y unicas")
+    if not dates.is_monotonic_increasing:
+        raise ValueError("El dataframe debe estar ordenado cronologicamente")
+    work = df.copy()
+    work["date"] = dates
+
+    split_cfg = cfg.get("split")
+    if not isinstance(split_cfg, dict):
+        raise ValueError("La configuracion debe definir split.train/val/test")
+
+    ranges: dict[str, tuple[pd.Timestamp, pd.Timestamp]] = {}
+    for name in ("train", "val", "test"):
+        bounds = split_cfg.get(name)
+        if not isinstance(bounds, (list, tuple)) or len(bounds) != 2:
+            raise ValueError(f"Rango de split invalido para {name}")
+        start, end = pd.Timestamp(bounds[0]), pd.Timestamp(bounds[1])
+        if start > end:
+            raise ValueError(f"Rango de split invertido para {name}")
+        ranges[name] = (start, end)
+
+    previous_end = None
+    for name in ("train", "val", "test"):
+        start, end = ranges[name]
+        if previous_end is not None and start <= previous_end:
+            raise ValueError("Los rangos temporalmente consecutivos se solapan")
+        previous_end = end
+
+    parts = {}
+    for name, (start, end) in ranges.items():
+        mask = (dates >= start) & (dates <= end)
+        part = work.loc[mask].copy().reset_index(drop=True)
+        if part.empty:
+            raise ValueError(f"El split {name} no contiene observaciones")
+        parts[name] = part
+    return parts
 
 
 def get_temporal_splitter(cfg: dict | None = None) -> TimeSeriesSplit:
-    """TimeSeriesSplit para CV sobre train+val (n_splits y gap de config)."""
+    """Devuelve ``TimeSeriesSplit`` con los parámetros configurados."""
     cfg = cfg or get_config()
     cv = cfg.get("cv") or get_params().get("cv", {})
-    return TimeSeriesSplit(n_splits=cv["n_splits"], gap=cv.get("gap", 0))
+    try:
+        n_splits = int(cv["n_splits"])
+        gap = int(cv.get("gap", 0))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("cv requiere n_splits entero y gap opcional") from exc
+    if n_splits < 2 or gap < 0:
+        raise ValueError("cv.n_splits debe ser >=2 y cv.gap no negativo")
+    return TimeSeriesSplit(n_splits=n_splits, gap=gap)
 
 
 def drop_warmup(df: pd.DataFrame, warmup: int = 260) -> pd.DataFrame:
-    """Elimina las primeras filas sin lags/ventanas completos.
+    """Elimina filas iniciales hasta disponer de features no nulas.
 
-    El warm-up se calcula por feature: se toma el primer índice sin NaN de
-    cada columna (cubre lags 126d, rolling 126d y exógenas con huecos como
-    us_gdp) y se eliminan todas las filas anteriores al máximo. Si se pasa
-    `warmup` explícito, se usa max(warmup, warmup_por_feature).
-
-    La función es segura para dataframes sin NaN (no elimina nada por
-    defecto cuando warmup=0) y para dataframes vacíos.
+    ``warmup`` es un mínimo explícito. Además se calcula la posición del
+    primer valor válido de cada columna; las columnas completamente vacías se
+    rechazan porque no pueden entrar en ningún modelo.
     """
+    if not isinstance(warmup, numbers.Integral) or isinstance(warmup, bool) or warmup < 0:
+        raise ValueError("warmup debe ser un entero no negativo")
     if df.empty:
-        return df
+        return df.copy().reset_index(drop=True)
 
-    # Primer índice no-NaN por columna; para columnas sin NaN es 0
-    first_valid = df.notna().idxmax()
-    # Si TODAS las columnas tienen algún NaN, el máximo de primeros índices
-    # marca el calentamiento necesario; si alguna columna no tiene NaN,
-    # idxmax devuelve el primer índice (0) y no debe recortar.
-    if first_valid.notna().all():
-        # Hay columnas sin NaN: el warm-up por-feature solo aplica a las que
-        # tienen NaN inicial; tomar el máximo entre ellas.
-        cols_with_nan = df.columns[df.isna().any()]
-        if len(cols_with_nan) > 0:
-            warmup_by_feature = int(first_valid[cols_with_nan].max())
-        else:
-            warmup_by_feature = 0
-    else:
-        warmup_by_feature = int(first_valid.max())
+    valid = df.notna().to_numpy(dtype=bool)
+    if (~valid.any(axis=0)).any():
+        all_null = df.columns[~valid.any(axis=0)].tolist()
+        raise ValueError(f"Columnas completamente nulas: {all_null[:10]}")
 
+    first_valid_positions = np.argmax(valid, axis=0)
+    warmup_by_feature = int(first_valid_positions.max())
     warmup_effective = max(int(warmup), warmup_by_feature)
     return df.iloc[warmup_effective:].reset_index(drop=True)

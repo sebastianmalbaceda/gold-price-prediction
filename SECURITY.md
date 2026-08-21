@@ -4,7 +4,8 @@
 
 | Versión | Soportada |
 |---------|-----------|
-| 1.0.x   | Sí        |
+| 1.1.x   | Sí        |
+| 1.0.x   | No        |
 
 ## Reportar una vulnerabilidad
 
@@ -28,9 +29,12 @@ la vulnerabilidad, se publicará un aviso y un parche en la siguiente versión.
 - **Sin secretos en el repositorio**: las claves y tokens van en variables
   de entorno (ver `.env.example`); `.env` está en `.gitignore`.
 - **Validación de entradas**: la API rechaza valores NaN/Inf, claves no
-  esperadas y fechas malformadas (HTTP 422).
-- **Dependencias fijadas**: `requirements.txt` y `pyproject.toml` definen
-  versiones mínimas verificadas.
+  esperadas, rangos absurdos y fechas malformadas (HTTP 422). `/health` es
+  liveness y `/ready` confirma que los artefactos existen y son compatibles.
+- **Dependencias declaradas**: `requirements.txt` y `pyproject.toml` definen
+  límites mínimos y superiores donde procede; un despliegue productivo debe
+  generar además un lockfile con hashes y ejecutar un escáner de vulnerabilidades.
 - **Sin datos personales**: el dataset contiene series de mercado públicas.
 - **Uso previsto**: este modelo NO debe utilizarse para trading automático
-  sin supervisión humana (ver `docs/model_card.md`).
+  sin supervisión humana. La API no incluye autenticación, rate limiting ni
+  TLS; no debe exponerse directamente a Internet (ver `docs/model_card.md`).

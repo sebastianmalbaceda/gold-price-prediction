@@ -12,18 +12,26 @@ from src.config import path_from_root
 
 
 def set_seed(seed: int = 42) -> None:
+    """Fija las fuentes de aleatoriedad usadas por el proyecto."""
+    if not isinstance(seed, int) or isinstance(seed, bool):
+        raise ValueError("seed debe ser un entero")
     random.seed(seed)
     np.random.seed(seed)
     try:
-        import torch  # noqa: F401
+        import torch
     except ImportError:
-        pass
-    else:
-        torch.manual_seed(seed)
+        return
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def save_fig(fig, name: str, subdir: str = "figures") -> Path:
     """Guarda una figura matplotlib en reports/<subdir>/."""
+    if not name or Path(name).name != name:
+        raise ValueError("name debe ser un nombre de fichero sin subdirectorios")
     out_dir = path_from_root("reports", subdir)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / name
@@ -62,10 +70,18 @@ def set_publication_style() -> None:
 
 def save_json(obj, name: str, subdir: str = "") -> Path:
     """Guarda un JSON en reports/ (o subcarpeta)."""
+    if not name or Path(name).name != name:
+        raise ValueError("name debe ser un nombre de fichero sin subdirectorios")
     out_dir = path_from_root("reports", subdir) if subdir else path_from_root("reports")
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / name
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, default=str)
+    temporary = path.with_name(f".{path.name}.tmp")
+    try:
+        temporary.write_text(
+            json.dumps(obj, indent=2, default=str, ensure_ascii=False), encoding="utf-8"
+        )
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
     print(f"[json] {path}")
     return path

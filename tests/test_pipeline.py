@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
+import torch
 from fastapi.testclient import TestClient
 
+import src.api.main as api_module
 from src.api.main import app
 from src.data.load_data import clean_daily_series
 from src.data.split import drop_warmup, temporal_split
@@ -18,6 +21,14 @@ from src.evaluation.metrics import (
 )
 from src.features.build_features import build_features, get_feature_columns, make_targets
 from src.models.classifier import make_direction_targets
+from src.models.deep_learning import (
+    GRUDirectionModel,
+    TabularMLP,
+    device_report,
+    make_sequences,
+    predict_proba,
+    train_binary_model,
+)
 
 client = TestClient(app)
 
@@ -237,6 +248,39 @@ def test_clean_daily_series_removes_weekends():
     assert clean["gold_spot"].notna().all()
 
 
+def test_clean_daily_series_does_not_fill_a_long_target_gap():
+    dates = pd.bdate_range("2000-01-03", periods=8)
+    df = pd.DataFrame(
+        {"date": dates, "gold_spot": [100.0, 100.0, np.nan, np.nan, np.nan, np.nan, 105.0, 106.0]}
+    )
+    cfg = {
+        "data": {
+            "start_date": "2000-01-01",
+            "end_date": "2000-02-01",
+            "excluded_features": [],
+            "max_missing_after_ffill": 0.99,
+        }
+    }
+    clean = clean_daily_series(df, cfg)
+    assert dates[5] not in set(clean["date"])
+    assert clean["gold_spot"].isna().sum() == 0
+
+
+def test_feature_columns_never_include_other_future_targets():
+    feats = make_targets(
+        build_features(
+            _make_df(100),
+            {
+                "features": {"target_lags": [1], "rolling_windows": [5], "exogenous_lags": [1]},
+                "target": {"horizons": [1, 5]},
+            },
+        ),
+        [1, 5],
+    )
+    columns = get_feature_columns(feats, [1])
+    assert not any(column.startswith("target_") for column in columns)
+
+
 # --- Fase 21: API ---
 def test_health():
     r = client.get("/health")
@@ -286,3 +330,94 @@ def test_predict_negative_extreme_rejected():
         json={"date": "2025-01-01", "features": {"us10y_yield": -1e9}},
     )
     assert r.status_code in (422, 500, 503)
+
+
+def test_metrics_reject_mismatched_or_invalid_probabilities():
+    with pytest.raises(ValueError):
+        smape(np.array([1.0]), np.array([1.0, 2.0]))
+    with pytest.raises(ValueError):
+        classification_metrics(np.array([0, 1]), np.array([0.2, 1.2]))
+
+
+def test_drop_warmup_rejects_all_null_columns():
+    with pytest.raises(ValueError, match="completamente nulas"):
+        drop_warmup(pd.DataFrame({"a": [1.0, 2.0], "empty": [np.nan, np.nan]}), 0)
+
+
+def test_make_sequences_is_causal_and_validates_dates():
+    dates = pd.bdate_range("2020-01-02", periods=12)
+    frame = pd.DataFrame(
+        {
+            "date": dates,
+            "feature": np.arange(len(dates), dtype=float),
+            "target": np.arange(len(dates)) % 2,
+        }
+    )
+    x, y, used = make_sequences(frame, ["feature"], "target", dates[4:8], lookback=3)
+    assert x.shape == (4, 3, 1)
+    assert np.array_equal(x[0, :, 0], np.array([2.0, 3.0, 4.0], dtype=np.float32))
+    assert np.array_equal(y, (np.arange(4, 8) % 2).astype(np.float32))
+    assert used.iloc[-1] == dates[7]
+    with pytest.raises(ValueError, match="no existe"):
+        make_sequences(frame, ["feature"], "target", [pd.Timestamp("2030-01-01")], 3)
+
+
+def test_deep_learning_cpu_training_and_prediction():
+    rng = np.random.default_rng(7)
+    x_train = rng.normal(size=(40, 3)).astype(np.float32)
+    y_train = (x_train[:, 0] > 0).astype(np.float32)
+    x_val = rng.normal(size=(20, 3)).astype(np.float32)
+    y_val = (x_val[:, 0] > 0).astype(np.float32)
+    result = train_binary_model(
+        TabularMLP(3, hidden=(8,), dropout=0.0),
+        x_train,
+        y_train,
+        x_val,
+        y_val,
+        device=torch.device("cpu"),
+        epochs=3,
+        batch_size=8,
+        patience=2,
+        seed=7,
+    )
+    probabilities = predict_proba(result.model, x_val, device="cpu")
+    assert result.device == "cpu"
+    assert 1 <= result.best_epoch <= 3
+    assert probabilities.shape == (len(x_val),)
+    assert np.isfinite(probabilities).all()
+    assert ((probabilities >= 0) & (probabilities <= 1)).all()
+
+
+def test_gru_forward_and_device_report():
+    model = GRUDirectionModel(n_features=2, hidden_size=4, dropout=0.0)
+    output = model(torch.zeros((3, 5, 2)))
+    report = device_report(torch.device("cpu"))
+    assert output.shape == (3,)
+    assert report["device"] == "cpu"
+    assert report["device_name"] == "cpu"
+
+
+def test_api_rejects_bad_date_before_loading_model(monkeypatch):
+    monkeypatch.setattr(api_module, "_ensure_loaded", lambda: None)
+    response = client.post("/predict", json={"date": "2025-02-30", "features": {}})
+    assert response.status_code == 422
+
+
+def test_api_predict_with_validated_dummy_model(monkeypatch):
+    class DummyPreprocessor:
+        def transform(self, values):
+            return values
+
+    class DummyModel:
+        def predict(self, values):
+            return np.array([1234.567])
+
+    monkeypatch.setattr(api_module, "_model", DummyModel())
+    monkeypatch.setattr(api_module, "_preprocessor", DummyPreprocessor())
+    monkeypatch.setattr(api_module, "_features", ["gold_spot_lag1"])
+    response = client.post(
+        "/predict", json={"date": "2025-02-28", "features": {"gold_spot_lag1": 1800}}
+    )
+    assert response.status_code == 200
+    assert response.json()["prediction_usd_per_oz"] == 1234.57
+    assert response.json()["date"] == "2025-02-28"

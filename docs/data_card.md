@@ -1,64 +1,74 @@
 # Data Card - Gold Price Prediction
 
-## Origen y licencia
-- **Fuente:** `data/raw/gold-price-prediction-dataset.csv` (compilación pública de
-  series de mercado; uso académico/educativo).
-- **Licencia:** sin restricciones conocidas para uso académico; no redistribuir
-  con fines comerciales sin verificar. El dataset **no contiene datos personales**.
-- **Frecuencia:** diaria (incluye fines de semana sin cotización).
-- **Periodo:** 1901-06-30 -> 2025-09-14 (45,368 filas x 61 columnas).
+## Origen y alcance
 
-## Diccionario de datos (variables principales)
+- **Fuente:** `data/raw/gold-price-prediction-dataset.csv`, compilacion publica
+  de series de mercado para uso academico.
+- **Periodo crudo:** 1901-06-30 -> 2025-09-14.
+- **Tamano crudo:** 45,368 filas y 61 columnas: fecha, `gold_spot` y 59
+  variables exogenas.
+- **Privacidad:** no contiene datos personales conocidos.
+- **Frecuencia:** diaria en el fichero crudo; incluye fines de semana sin
+  cotizacion de oro.
 
-### Target
-| Nombre | Descripción | Tipo | Unidad | Nulos (2000+) | Rango | Disponibilidad | Leakage | Tratamiento |
-|---|---|---|---|---|---|---|---|---|
-| `gold_spot` | Precio spot del oro | float | USD/oz | 0.2% | 263-3,430 | diaria (días hábiles) | - | target + lags |
+## Transformacion reproducible
 
-### Exógenas usadas (35 en modelo)
-| Nombre | Descripción | Tipo | Nulos | Rango | Leakage | Tratamiento |
-|---|---|---|---|---|---|---|
-| `us10y_yield`, `us2y_yield` | Tipos del Tesoro USA 10y/2y | float % | <5% | 0.1-5.4 | no | lag1 + retorno |
-| `dxy_index`, `dxy_future` | Índice dólar (DXY) | float | <5% | 71-120 | no | lag1 + retorno |
-| `usdjpy_exchange`, `eurusd_exchange`, `usdcny_exchange`, `usdinr_exchange` | Pares FX | float | <5% | varios | no | lag1 + retorno |
-| `silver_spot`, `platinum_spot`, `palladium_spot`, `copper_futures` | Metales | float USD | <5% | varios | no | lag1 + retorno |
-| `wti_spot`, `brent_spot`, `wti_futures`, `brent_futures` | Petróleo | float USD | <5% | 10-130 | no | lag1 + retorno |
-| `vix_index`, `vix_futures`, `move_index`, `ovx_index`* | Volatilidad | float | <10% | 9-80 | no | lag1 + retorno |
-| `sp500_futures`, `sp500_index`* | Renta variable | float | <30% | 700-6,000 | no | lag1 + retorno |
-| `gold_futures`, `comex_micro_gold`* | Futuros oro | float USD | <25% | 260-3,400 | no | lag1 + retorno |
-| `policy_uncertainty`, `geopolitical_risk` | Riesgo político/geopolítico | float | <5% | 0-700 | no | lag1 + retorno |
-| `credit_spread`, `us_financial_stress_index`* | Estrés crediticio | float | <15% | 0.2-6 | no | lag1 + retorno |
-| `commodities_bloomberg`, `commodities_crb` | Índices materias primas | float | <5% | 180-600 | no | lag1 + retorno |
-| `bitcoin_price` | Precio BTC | float USD | <5% | 0-100k | no | lag1 + retorno |
-| `etf_gold_flows`, `gdx_index` | Flujos ETF oro / mineras | float | <10% | varios | no | lag1 + retorno |
-| `us_cpi`, `us_unemployment`, `fed_funds`* | Macro USA | float | **3%** | varios | publicación retrasada | lag1 (ffill) |
+1. Se valida que `date` sea valida, ordenada y unica.
+2. Se recorta a 2000-01-01 -> 2025-09-12 y se eliminan fines de semana.
+3. Se excluyen 24 variables por cobertura o riesgo documentado en
+   `configs/config.yaml`.
+4. Se aplica forward-fill causal a exogenas. `gold_spot` solo se rellena hasta
+   tres dias habiles y las ausencias largas no se convierten en precios
+   ficticios.
+5. Las exogenas con cobertura residual superior al 10% se eliminan. El
+   resultado actual tiene 6,705 filas y 27 columnas.
+6. Se generan lags, retornos, rolling, calendario e indicadores de ausencia.
+   El parquet de features tiene 133 columnas y 83 features seleccionadas para
+   el modelo final despues del filtro de redundancia.
 
-\* = disponible en el dataset pero **excluida del modelo** por cobertura <50% (ver `config.yaml -> excluded_features`).
+Los derivados se regeneran con:
 
-### Features excluidas (26) por cobertura insuficiente (<50% en 2000+)
-`us_fiscal_deficit`, `us_gdp`, `google_trends_gold_element/word`, `copper_spot`,
-`fx_reserves_china`, `us_m2`, `us_industrial_production`, `us_retail_sales`,
-`us_consumer_sentiment`, `us_unemployment` (excluida en favor de CPI), `export_price_index`,
-`us_cpi` (duplicada por correlación), `fed_funds`, `consumer_confidence`,
-`us_personal_saving_rate`, `us10y_real`, `cftc_gold_positions`, `fed_balance_walcl`,
-`us_financial_stress_index`, `ovx_index`, `gold_volatility_gvz`, `palladium_futures`,
-`sp500_index`, `comex_micro_gold`.
+```bash
+python -m src.data.load_data
+python -m src.features.build_features
+```
 
-> Nota: algunas quedan fuera por cobertura, otras por redundancia (|rho|>0.98) tras el filtro de la fase 10.
+## Variables principales
 
-## Variables derivadas (feature engineering, fase 9)
-| Feature | Definición | Leakage |
+| Grupo | Ejemplos | Tratamiento | Leakage |
+|---|---|---|---|
+| Target | `gold_spot` | nivel y targets futuros | target por diseño |
+| Mercado | DXY, FX, plata, platino, petroleo, futuros | nivel, lag 1 y retorno cuando es positivo | no |
+| Riesgo | `policy_uncertainty`, `geopolitical_risk`, VIX | nivel, lag y retorno | no |
+| Calendario | `year`, `month`, `dayofweek`, `quarter`, `dayofyear` | calculado desde `date` | no |
+| Ausencia | `{feature}_missing` | indicador del valor crudo ausente | no |
+
+Las variables macro de baja cobertura (PIB, CPI, empleo, M2, ventas, etc.) se
+mantienen documentadas en la auditoria, pero se excluyen del conjunto actual
+por `excluded_features` o por cobertura residual. Las publicaciones tempranas
+en el fichero crudo pueden introducir lookahead; se cuantifica el riesgo y se
+propone aplicar `PUBLICATION_LAG` antes de un uso productivo.
+
+## Targets y variables derivadas
+
+| Nombre | Definicion | Leakage |
 |---|---|---|
-| `gold_spot_lag{k}` | precio del oro hace k días (ken{1,2,3,5,10,21}) | no (pasado) |
-| `gold_ret_lag{k}` | retorno log a k días | no |
-| `gold_ret_roll{w}` | retorno log de ventana wen{5,21,63,126} | no |
-| `gold_rollmean_{w}`, `gold_rollstd_{w}` | media/desv. móvil | no |
-| `{exog}_lag1`, `{exog}_ret_lag1` | valor/retorno de la exógena en t-1 | no |
-| `{exog}_missing` | 1 si el dato original faltaba en t | no |
-| `year, month, dayofweek, quarter, dayofyear` | calendario | no |
-| `target_{h}` | gold_spot en t+h (hen{1,5,21}) | **sí por diseño** (etiqueta) |
+| `gold_spot_lag{k}` | precio del oro hace k observaciones | no |
+| `gold_ret_lag{k}` | retorno logaritmico a k observaciones | no |
+| `gold_ret_roll{w}` | retorno logaritmico de ventana w | no |
+| `gold_rollmean_{w}`, `gold_rollstd_{w}` | estadisticos moviles | no |
+| `{exog}_lag1`, `{exog}_ret_lag1` | valor/retorno de la exogena en t-1 | no |
+| `target_{h}` | `gold_spot` en t+h, h en {1,5,21} | **si, etiqueta** |
+
+Todas las ventanas se construyen hacia atras. Los targets futuros se excluyen
+de las matrices mediante `get_feature_columns`, que elimina cualquier columna
+con prefijo `target_` aunque el llamador solicite un unico horizonte.
 
 ## Calidad y gobierno
-- **Inmutabilidad:** `data/raw/` nunca se modifica; los derivados van a `interim/` y `processed/`.
-- **Reproducibilidad:** el pipeline completo se regenera con `python -m src.data.load_data` y `python -m src.features.build_features`.
-- **Retención:** no aplica (sin datos personales). **Accesos:** repositorio interno.
+
+- `data/raw/` es inmutable y esta excluido de Git.
+- `data/interim/` y `data/processed/` son derivados regenerables.
+- El split es temporal: train 2000-2019, validation 2020-2022, test 2023-2025.
+- El preprocesador se ajusta solo con train.
+- La licencia y las condiciones de redistribucion de la compilacion deben
+  verificarse antes de un uso comercial.

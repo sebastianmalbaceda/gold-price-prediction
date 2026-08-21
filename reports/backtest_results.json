@@ -1,14 +1,14 @@
 {
-  "auc_test_rf": 0.5713346341295696,
+  "auc_test_rf": 0.533114432821324,
   "auc_ci95": [
-    0.4558568384600209,
-    0.5452852723297603
+    0.4900223059173659,
+    0.5741896142992166
   ],
-  "mejor_umbral": 0.51,
-  "mejor_sharpe": 1.599771286179757,
-  "mejor_ret": 0.487489345491533,
+  "mejor_umbral": 0.53,
+  "mejor_sharpe": 1.2356427787861946,
+  "mejor_ret": 0.28028755998928667,
   "buy_hold": 0.8289237754223628,
-  "t_stat": -1.153254690786117,
-  "p_value_ttest": 0.2492092880052747,
-  "nota": "Se\u00f1al significativa en test (AUC 0.57) pero NO rentable vs buy&hold: CV AUC ~0.52 (inestable). Uso: indicador de riesgo, no estrategia de trading."
+  "t_stat": -1.7613495913070067,
+  "p_value_ttest": 0.07862664908712172,
+  "nota": "AUC test 0.533; no supera buy&hold de forma robusta (p-value t-test 0.079). Uso: indicador de riesgo, no estrategia de trading."
 }

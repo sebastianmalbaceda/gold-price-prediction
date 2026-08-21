@@ -39,8 +39,10 @@ htmlcov/
 notebooks/*_executed.html
 nbconvert/
 .nb_tmp/
+.nb_tmp_dl.ipynb
 
-# Experimentos / logs
+# Temporales de escrituras atomicas y experimentos
+*.tmp
 logs/
 *.log
 

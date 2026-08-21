@@ -28,7 +28,20 @@ def _target_lags(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
     return df
 
 
+def _validate_positive_price(series: pd.Series) -> None:
+    values = pd.to_numeric(series, errors="coerce")
+    if values.isna().any() or not np.isfinite(values.to_numpy()).all() or (values <= 0).any():
+        raise ValueError("gold_spot debe contener valores positivos y finitos")
+
+
+def _validate_lags(values: list[int], name: str) -> list[int]:
+    if not values or any(isinstance(v, bool) or int(v) != v or int(v) < 1 for v in values):
+        raise ValueError(f"{name} debe contener enteros positivos")
+    return [int(v) for v in values]
+
+
 def _target_returns(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
+    _validate_positive_price(df["gold_spot"])
     log_price = np.log(df["gold_spot"])
     for lag in lags:
         df[f"gold_ret_lag{lag}"] = log_price - log_price.shift(lag)
@@ -36,11 +49,13 @@ def _target_returns(df: pd.DataFrame, lags: list[int]) -> pd.DataFrame:
 
 
 def _target_rolling(df: pd.DataFrame, windows: list[int]) -> pd.DataFrame:
+    _validate_positive_price(df["gold_spot"])
     log_price = np.log(df["gold_spot"])
     for w in windows:
+        min_periods = max(1, w // 2)
         df[f"gold_ret_roll{w}"] = log_price - log_price.shift(w)  # retorno w días
-        df[f"gold_rollmean_{w}"] = df["gold_spot"].rolling(w, min_periods=w // 2).mean()
-        df[f"gold_rollstd_{w}"] = df["gold_spot"].rolling(w, min_periods=w // 2).std()
+        df[f"gold_rollmean_{w}"] = df["gold_spot"].rolling(w, min_periods=min_periods).mean()
+        df[f"gold_rollstd_{w}"] = df["gold_spot"].rolling(w, min_periods=min_periods).std()
     return df
 
 
@@ -59,11 +74,15 @@ def _exogenous_features(df: pd.DataFrame, exog: list[str], lags: list[int]) -> p
     for col in exog:
         if col in ("date", "gold_spot"):
             continue
+        series = pd.to_numeric(df[col], errors="coerce")
         for lag in lags:
-            df[f"{col}_lag{lag}"] = df[col].shift(lag)
-            # Retorno log del nivel de la exógena (siempre > 0 para índices/precios)
-            if df[col].min() > 0:
-                df[f"{col}_ret_lag{lag}"] = np.log(df[col]) - np.log(df[col]).shift(lag)
+            df[f"{col}_lag{lag}"] = series.shift(lag)
+            # Solo calcular retornos log si todos los valores observados son
+            # estrictamente positivos (indices, precios y tipos pueden tener
+            # escalas distintas).
+            observed = series.dropna()
+            if not observed.empty and (observed > 0).all():
+                df[f"{col}_ret_lag{lag}"] = np.log(series) - np.log(series).shift(lag)
         # Indicador de dato original ausente (antes del ffill) si está disponible
     return df
 
@@ -78,7 +97,11 @@ def _gap_indicators(df: pd.DataFrame, exog: list[str], raw: pd.DataFrame | None)
     ]
     if not present:
         return df
-    raw_series = raw.set_index("date")[present]
+    raw_copy = raw.copy()
+    raw_copy["date"] = pd.to_datetime(raw_copy["date"], errors="coerce")
+    if raw_copy["date"].isna().any() or raw_copy["date"].duplicated().any():
+        raise ValueError("raw debe tener fechas validas y unicas para crear indicadores")
+    raw_series = raw_copy.set_index("date")[present]
     aligned = raw_series.reindex(pd.DatetimeIndex(df["date"]))
     missing_df = aligned.isna().astype("int8")
     missing_df.columns = [f"{c}_missing" for c in missing_df.columns]
@@ -100,18 +123,28 @@ def build_features(
     """
     cfg = cfg or get_config()
     f = cfg["features"]
+    if "date" not in df.columns or "gold_spot" not in df.columns:
+        raise ValueError("El dataframe debe contener date y gold_spot")
+    dates = pd.to_datetime(df["date"], errors="coerce")
+    if dates.isna().any() or dates.duplicated().any() or not dates.is_monotonic_increasing:
+        raise ValueError("El dataframe debe estar ordenado y tener fechas validas unicas")
+    _validate_positive_price(df["gold_spot"])
+    target_lags = _validate_lags(f.get("target_lags", []), "target_lags")
+    rolling_windows = _validate_lags(f.get("rolling_windows", []), "rolling_windows")
+    exogenous_lags = _validate_lags(f.get("exogenous_lags", []), "exogenous_lags")
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", pd.errors.PerformanceWarning)
 
         out = df.copy()
-        out = _target_lags(out, f["target_lags"])
-        out = _target_returns(out, f["target_lags"])
-        out = _target_rolling(out, f["rolling_windows"])
-        out = _calendar_features(out)
+        out = _target_lags(out, target_lags)
+        out = _target_returns(out, target_lags)
+        out = _target_rolling(out, rolling_windows)
+        if f.get("calendar", True):
+            out = _calendar_features(out)
 
         exog = [c for c in df.columns if c not in ("date", "gold_spot")]
-        out = _exogenous_features(out, exog, f["exogenous_lags"])
+        out = _exogenous_features(out, exog, exogenous_lags)
         out = _gap_indicators(out, exog, raw)
 
         # Defensa en profundidad: eliminar columnas completamente vacías
@@ -127,24 +160,34 @@ def build_features(
 
 
 def make_targets(df: pd.DataFrame, horizons: list[int]) -> pd.DataFrame:
-    """Crea targets a futuro: gold_spot desplazado -h días (target=h).
+    """Crea targets a futuro usando observaciones de días hábiles.
 
-    IMPORTANTE: se crean ANTES del split y se eliminan las filas cuyo
-    target cae fuera del conjunto (fin de serie) para evitar targets
-    con información futura dentro del propio conjunto de entrenamiento.
+    Los targets se crean antes del split y se eliminan las últimas filas sin
+    observacion futura. Ningun target se usa como feature posteriormente.
     """
+    if "gold_spot" not in df.columns:
+        raise ValueError("El dataframe debe contener gold_spot")
+    horizons = _validate_lags(horizons, "horizons")
     out = df.copy()
     for h in horizons:
         out[f"target_{h}"] = out["gold_spot"].shift(-h)
-    # Filas con target futuro no disponible se descartan
-    out = out.dropna(subset=[f"target_{h}" for h in horizons])
-    return out.reset_index(drop=True)
+    return out.dropna(subset=[f"target_{h}" for h in horizons]).reset_index(drop=True)
 
 
-def get_feature_columns(df: pd.DataFrame, horizons: list[int]) -> list[str]:
-    """Columnas usadas como features (todo excepto date, gold_spot, targets)."""
-    drop = {"date", "gold_spot"} | {f"target_{h}" for h in horizons}
-    return [c for c in df.columns if c not in drop]
+def get_feature_columns(df: pd.DataFrame, horizons: list[int] | None = None) -> list[str]:
+    """Devuelve features y excluye siempre todas las columnas ``target_*``.
+
+    Aunque el llamador solicite un solo horizonte, no se puede dejar otro
+    target futuro en la matriz: hacerlo introduciria leakage accidental.
+    ``horizons`` se conserva por compatibilidad y se valida si se proporciona.
+    """
+    if horizons is not None:
+        _validate_lags(horizons, "horizons")
+    return [
+        column
+        for column in df.columns
+        if column not in {"date", "gold_spot"} and not column.startswith("target_")
+    ]
 
 
 if __name__ == "__main__":
@@ -155,7 +198,10 @@ if __name__ == "__main__":
     clean = build_interim(cfg)
     feats = build_features(clean, cfg, raw)
     feats = make_targets(feats, cfg["target"]["horizons"])
-    out_path = cfg["data"]["processed_dir"]
-    feats.to_parquet(f"{out_path}/features.parquet", index=False)
+    from pathlib import Path
+
+    out_path = Path(cfg["data"]["processed_dir"])
+    out_path.mkdir(parents=True, exist_ok=True)
+    feats.to_parquet(out_path / "features.parquet", index=False)
     print(f"[features] guardado en {out_path}/features.parquet shape={feats.shape}")
     print("[features] columnas:", len(get_feature_columns(feats, cfg["target"]["horizons"])))

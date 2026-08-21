@@ -75,7 +75,7 @@ model:
   preprocessor_path: models/preprocessor.joblib
   feature_list_path: models/feature_list.json
   metrics_path: reports/metrics.json
-  version: "1.0.0"
+  version: "1.1.0"
 
 api:
   host: "127.0.0.1"

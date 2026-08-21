@@ -8,7 +8,7 @@ principal es `notebooks/16c_deep_learning_clasificacion.ipynb`.
 
 Se comparan:
 
-- MLP tabular sobre las 109 features del modelo estable.
+- MLP tabular sobre las 83 features del modelo estable.
 - GRU causal sobre ventanas de 21 dias.
 
 La etiqueta es `dir_1(t) = 1` si `gold_spot(t+1) > gold_spot(t)`.
@@ -29,23 +29,16 @@ Comprobacion rapida:
 python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'cpu')"
 ```
 
-Instalacion CPU:
+Instalacion general del proyecto:
 
 ```bash
-pip install -r requirements-dl-cpu.txt
+pip install -r requirements.txt
 ```
 
-Instalacion NVIDIA CUDA 12.8:
-
-```bash
-pip install -r requirements-dl-cuda128.txt
-```
-
-Instalacion generica:
-
-```bash
-pip install -r requirements-dl.txt
-```
+Para una build CUDA especifica de PyTorch, consulte el indice oficial de
+PyTorch y seleccione la version compatible con su controlador. La deteccion
+de hardware se realiza en tiempo de ejecucion y el sistema usa CPU si CUDA
+no esta disponible.
 
 ## Control de leakage y sobreajuste
 
@@ -58,10 +51,10 @@ pip install -r requirements-dl.txt
 
 ## Resultados de referencia
 
-| Modelo | Validation AUC | Test AUC | Dispositivo |
-|---|---:|---:|---|
-| MLP | 0.544 | 0.538 | CUDA |
-| GRU | 0.529 | 0.528 | CUDA |
+| Modelo | Train AUC | Validation AUC | Test AUC | Dispositivo |
+|---|---:|---:|---:|---|
+| MLP | 0.649 | 0.550 | 0.534 | CUDA |
+| GRU | 0.569 | 0.543 | 0.510 | CUDA |
 
 El MLP es el mejor modelo DL por validation, pero no supera al RandomForest
 regularizado de la fase 17c. Por ello se conserva como experimento reproducible
@@ -70,7 +63,9 @@ y no se reemplaza el modelo operativo.
 ## Regeneracion
 
 ```bash
-make train-dl
+make train-neural
+# Alternativa sin make:
+bash scripts/run_notebooks.sh 16c_deep_learning_clasificacion
 ```
 
 Los pesos `.pt` y los metadatos generados se mantienen fuera de Git mediante

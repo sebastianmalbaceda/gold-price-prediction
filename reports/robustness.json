@@ -1,19 +1,19 @@
 {
   "segment_performance": {
     "2023": {
-      "mae": 86.816,
-      "smape": 4.545,
-      "directional_accuracy": 48.263
+      "mae": 41.442,
+      "smape": 2.14,
+      "directional_accuracy": 45.174
     },
     "2024": {
-      "mae": 205.143,
-      "smape": 8.871,
-      "directional_accuracy": 45.211
+      "mae": 99.718,
+      "smape": 4.215,
+      "directional_accuracy": 45.594
     },
     "2025": {
-      "mae": 393.164,
-      "smape": 13.37,
-      "directional_accuracy": 49.068
+      "mae": 193.364,
+      "smape": 6.382,
+      "directional_accuracy": 48.447
     }
   },
   "covariate_shift": {
@@ -34,7 +34,7 @@
       "p_value": 0.0
     },
     "eurusd_exchange": {
-      "ks_stat": 0.606,
+      "ks_stat": 0.605,
       "p_value": 0.0
     },
     "us2y_yield": {
@@ -46,7 +46,7 @@
       "p_value": 0.0
     },
     "dxy_index": {
-      "ks_stat": 0.765,
+      "ks_stat": 0.764,
       "p_value": 0.0
     },
     "silver_spot": {
@@ -62,19 +62,19 @@
       "p_value": 0.0
     },
     "platinum_spot": {
-      "ks_stat": 0.336,
+      "ks_stat": 0.335,
       "p_value": 0.0
     },
     "brent_spot": {
       "ks_stat": 0.501,
       "p_value": 0.0
     },
-    "vix_index": {
-      "ks_stat": 0.229,
+    "copper_futures": {
+      "ks_stat": 0.805,
       "p_value": 0.0
     },
-    "commodities_bloomberg": {
-      "ks_stat": 0.567,
+    "vix_index": {
+      "ks_stat": 0.229,
       "p_value": 0.0
     }
   }

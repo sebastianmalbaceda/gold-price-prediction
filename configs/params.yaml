@@ -46,5 +46,5 @@ model_selection:
   selected: ridge
   reason: Mejor MAE en CV temporal y validation. Lineal regularizado generaliza mejor
     en niveles no estacionarios.
-  val_mae_cv: 53.674602974443374
-  val_mae_holdout: 36.88678339598979
+  val_mae_cv: 69.97622023625334
+  val_mae_holdout: 60.44333355419922
