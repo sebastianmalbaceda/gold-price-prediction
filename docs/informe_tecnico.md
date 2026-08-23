@@ -122,6 +122,7 @@ artefacto desplegado se calibra con isotonic y h=1.
 | h=21 | 0.584 | 0.509 | 0.484 | 0.677 |
 
 - Diagnóstico no calibrado h=1: AUC=0.573, ACC=0.558. El artefacto desplegado calibrado obtiene **AUC=0.532, ACC=0.539, recall=0.984, PR-AUC=0.576, Brier=0.247**.
+- **Trazabilidad de métricas**: estas cifras del artefacto calibrado provienen de `models/direction_metrics.json`, que no está versionado; no son auditables sin reejecutar el pipeline.
 - Señal débil e inestable: el walk-forward medio es AUC=0.526 +/- 0.043.
 - Features más informativas: momentum (`gold_ret_lag1`, `gold_ret_roll63`)
   y riesgo (`geopolitical_risk`, `policy_uncertainty`, `usdinr_exchange_ret_lag1`).
@@ -309,7 +310,7 @@ solo las de valor estadístico complementario (Spearman, PACF).
 
 - Sin datos personales; series de mercado públicas.
 - Uso previsto: analítico; **no** asesoramiento financiero automatizado ni trading sin supervisión.
-- Sin secretos en repo; dependencias fijadas; validación de inputs en API.
+- Sin secretos en repo; dependencias declaradas con cotas mínimas; la reproducción exacta requiere un lockfile; validación de inputs en API.
 - Riesgo de uso indebido: predicciones como "certezas" - se documenta la incertidumbre real.
 
 ## 13. Despliegue (fase 21)

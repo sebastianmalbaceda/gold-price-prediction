@@ -95,7 +95,7 @@ de variables, los hiperparámetros o la elección de modelo.
 
 * Repositorio Git
 * README
-* Entorno y dependencias fijadas
+* Dependencias declaradas con cotas mínimas; la reproducción exacta requiere un lockfile
 * Configuraciones separadas del código
 * Carpetas de datos crudos, procesados, modelos, notebooks, código fuente, informes y pruebas
 * `.gitignore`
@@ -1020,17 +1020,17 @@ Estas cuestiones se revisan desde el inicio, no solamente al final.
 ## 21.1 Pipeline de inferencia
 
 ```text
-Input crudo
+Vector de features ya calculadas (mismo esquema que entrenamiento)
 -> validación de esquema
 -> preprocessing entrenado
--> feature engineering
--> feature selection
 -> modelo
 -> umbral/postprocesamiento
 -> respuesta
 ```
 
 El sistema de inferencia debe usar exactamente el preprocessing entrenado; recrearlo manualmente de forma "similar" causa divergencias entre entrenamiento y producción. [^4](https://developers.google.com/machine-learning/guides/rules-of-ml)
+La API actual recibe ese vector ya calculado; no ingiere datos crudos ni ejecuta
+ingeniería o selección de features.
 
 ## 21.2 Formas de entrega
 
@@ -1209,4 +1209,3 @@ Cuando lleguen etiquetas reales:
 La idea definitiva es: **el EDA genera hipótesis; train aprende; validation y CV eligen; test verifica; análisis explica; despliegue operacionaliza; monitorización mantiene la validez**.
 
 ---
-

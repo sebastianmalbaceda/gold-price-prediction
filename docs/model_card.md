@@ -49,6 +49,10 @@ valor está en el seguimiento de tendencia, no en el cambio diario.
 | F1 | 0.696 |
 | Brier | 0.247 |
 
+**Trazabilidad de métricas**: estas cifras del artefacto calibrado provienen de
+`models/direction_metrics.json`, que no está versionado; no son auditables sin
+reejecutar el pipeline.
+
 Señal **débil e inestable**; el intervalo del diagnóstico incluye 0.5. No apta para trading automático.
 
 ## Análisis de rentabilidad (fase 17b)

@@ -31,10 +31,18 @@ la vulnerabilidad, se publicará un aviso y un parche en la siguiente versión.
 - **Validación de entradas**: la API rechaza valores NaN/Inf, claves no
   esperadas, rangos absurdos y fechas malformadas (HTTP 422). `/health` es
   liveness y `/ready` confirma que los artefactos existen y son compatibles.
+- **Controles opcionales de la API**: si se define `GOLD_API_KEY`, `/predict`
+  y `/predict_direction` exigen la cabecera `X-API-Key`; si no se define, esos
+  endpoints quedan abiertos por compatibilidad histórica y deben usarse solo
+  en local. `API_MAX_BODY_BYTES` limita el `Content-Length` declarado; su valor
+  predeterminado es 131072 bytes (128 KiB) y un valor superior recibe HTTP 413.
+  El campo `features` está limitado por Pydantic a 256 entradas.
 - **Dependencias declaradas**: `requirements.txt` y `pyproject.toml` definen
   límites mínimos y superiores donde procede; un despliegue productivo debe
   generar además un lockfile con hashes y ejecutar un escáner de vulnerabilidades.
 - **Sin datos personales**: el dataset contiene series de mercado públicas.
 - **Uso previsto**: este modelo NO debe utilizarse para trading automático
-  sin supervisión humana. La API no incluye autenticación, rate limiting ni
-  TLS; no debe exponerse directamente a Internet (ver `docs/model_card.md`).
+  sin supervisión humana. La API no incluye rate limiting ni TLS; no debe
+  exponerse directamente a Internet. Para cualquier exposición externa,
+  situarla detrás de un reverse proxy con TLS, autenticación, rate limiting,
+  límite de cuerpo y logs (ver `docs/model_card.md`).

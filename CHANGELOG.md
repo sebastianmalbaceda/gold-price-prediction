@@ -28,7 +28,9 @@ El formato sigue Keep a Changelog y Semantic Versioning.
 - 20 notebooks ejecutados que cubren las 23 fases metodologicas.
 - Modelo de regresion Ridge para niveles: MAE 99.75 USD/oz en test,
   R2 = 0.935.
-- Clasificador de direccion calibrado: AUC 0.532 en test.
+- Clasificador de direccion calibrado: AUC 0.532 en test. Esta cifra proviene
+  de `models/direction_metrics.json`, que no está versionado; no es auditable
+  sin reejecutar el pipeline.
 - Modelo de volatilidad realizada con position sizing: Sharpe 1.83 vs 1.61
   de buy and hold.
 - Auditoria de datos temporales, API REST, CLI, monitorizacion, tests,

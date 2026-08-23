@@ -97,6 +97,8 @@ con el dataset disponible y de ejecutar los notebooks desde procesos limpios.
   R2 0.9352.
 - Clasificador calibrado desplegado: test AUC 0.532, PR-AUC 0.576,
   accuracy 0.539, Brier 0.247.
+  **Trazabilidad:** estas cifras provienen de `models/direction_metrics.json`,
+  que no está versionado; no son auditables sin reejecutar el pipeline.
 - MLP: train/validation/test AUC 0.649/0.550/0.534.
 - GRU: train/validation/test AUC 0.569/0.543/0.510.
 - Dispositivo DL observado: NVIDIA GeForce RTX 3050 Ti Laptop GPU, CUDA 12.8.
@@ -115,8 +117,9 @@ con el dataset disponible y de ejecutar los notebooks desde procesos limpios.
 - Los artefactos de modelos no se versionan en Git; deben regenerarse con el
   dataset y las dependencias de `requirements.txt`. `/ready` permite detectar
   el caso de forma explicita.
-- La API academica no incorpora autenticacion, rate limiting ni TLS. Debe
-  situarse detras de un proxy seguro antes de cualquier exposicion externa.
+- Si `GOLD_API_KEY` no se define, la API queda abierta; no incorpora rate
+  limiting ni TLS. Debe situarse detras de un proxy con TLS, autenticación,
+  rate limiting, límite de cuerpo y logs antes de cualquier exposicion externa.
 - La imagen general instala PyTorch junto con el resto del proyecto. Para
   produccion conviene generar un lockfile y seleccionar la wheel CUDA/CPU
   compatible con el hardware, sin volver a separar la extension del flujo

@@ -43,6 +43,7 @@ P(gold(t+1) > gold(t)) reutilizando las mismas features y split:
 
 - Diagnóstico RF no calibrado h=1: AUC=0.573, ACC=0.558.
 - **Artefacto desplegado calibrado**: AUC=0.532, ACC=0.539, recall=0.984, PR-AUC=0.576, Brier=0.247.
+- **Trazabilidad de métricas**: estas cifras del artefacto calibrado provienen de `models/direction_metrics.json`, que no está versionado; no son auditables sin reejecutar el pipeline.
 - Señal **débil e inestable**: el artefacto calibrado obtiene AUC=0.532 y el walk-forward medio es 0.526.
 - La señal proviene de momentum (`gold_ret_lag1`, `gold_ret_roll63`) y riesgo
   geopolítico (`geopolitical_risk`, `policy_uncertainty`).
@@ -169,8 +170,9 @@ práctico, a diferencia de la señal de dirección pura.
 
 Análisis exhaustivo en `notebooks/18b_auditoria_datos.ipynb`:
 
-**Frecuencias de actualización** (días entre cambios): 26 diarias  |  13 mensuales
-(CPI, paro, M2, retail)  |  1 semanal  |  PIB trimestral (92 días).
+**Frecuencias auditadas**: el artefacto actual audita 25 features limpias, todas
+con mediana de un día entre cambios; las frecuencias macro crudas aún no se
+persisten en `reports/data_audit.json`.
 
 **Lookahead bias detectado**: CPI, paro y PIB se actualizan **siempre el día 1
 del mes** en el dataset, pero en realidad se publican con 5-30 días de retraso.
@@ -263,6 +265,8 @@ uvicorn src.api.main:app --reload
 #    GET  /ready             (artefactos disponibles)
 #    POST /predict           {"date": "2025-08-14", "features": {...}}
 #    POST /predict_direction  {"date": "2025-08-14", "features": {...}}  -> P(sube)
+#    La API exige el vector completo de features ya calculadas con el mismo
+#    esquema que el entrenamiento; no ingiere datos crudos.
 
 # 4) Predicción CLI
 python scripts/predict.py --date 2025-09-12

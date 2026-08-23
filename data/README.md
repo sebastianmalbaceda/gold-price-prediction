@@ -5,7 +5,7 @@
 #
 # - `raw/`       -> datos ORIGINALES descargados. NUNCA se modifican.
 #   - `gold-price-prediction-dataset.csv`: 45,368 filas diarias (1901-06-30 a
-#     2025-09-14) x 61 columnas (fecha + gold_spot + 60 exógenas financieras:
+#     2025-09-14) x 61 columnas (fecha + gold_spot + 59 exógenas financieras:
 #     tipos, FX, materias primas, índices, macro).
 #
 # - `interim/`   -> datos transformados en pasos intermedios.
