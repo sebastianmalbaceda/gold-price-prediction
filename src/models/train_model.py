@@ -8,6 +8,7 @@ from pathlib import Path
 import joblib
 
 from src.config import get_config, path_from_root
+from src.utils import atomic_write_joblib, atomic_write_text
 
 
 def _validate_feature_list(feature_list: list[str]) -> None:
@@ -17,22 +18,9 @@ def _validate_feature_list(feature_list: list[str]) -> None:
         raise ValueError("feature_list contiene columnas duplicadas")
 
 
-def _atomic_joblib(value, path: Path) -> None:
-    temporary = path.with_name(f".{path.name}.tmp")
-    try:
-        joblib.dump(value, temporary)
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
-def _atomic_text(content: str, path: Path) -> None:
-    temporary = path.with_name(f".{path.name}.tmp")
-    try:
-        temporary.write_text(content, encoding="utf-8")
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
+# Alias retrocompatibles: la implementacion unica vive en ``src.utils``.
+_atomic_joblib = atomic_write_joblib
+_atomic_text = atomic_write_text
 
 
 def save_model_artifacts(

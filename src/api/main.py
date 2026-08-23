@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import functools
 import logging
 import math
+import os
 import re
-from datetime import date, datetime
+import secrets
+import threading
+from datetime import date
 
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.config import get_config
@@ -31,7 +37,22 @@ _clf = None
 _clf_pp = None
 _clf_features: list[str] = []
 MAX_FEATURES = 256
+# Limite del cuerpo HTTP. Se aplica ANTES de deserializar: sin el, el limite de
+# MAX_FEATURES solo actua cuando Pydantic ya ha materializado el diccionario
+# completo en memoria, lo que deja abierta una denegacion de servicio por
+# volumen. 256 features numericas caben holgadamente en 128 KiB.
+MAX_BODY_BYTES = int(os.environ.get("API_MAX_BODY_BYTES", 128 * 1024))
+# Clave de API opcional. Si no se define GOLD_API_KEY la API queda abierta
+# (comportamiento historico, valido solo en local); definirla activa la
+# autenticacion por cabecera ``X-API-Key`` en los endpoints de inferencia.
+_API_KEY = os.environ.get("GOLD_API_KEY", "")
+_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 _DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# Los artefactos se cargan de forma perezosa desde varios hilos del threadpool
+# de Starlette; sin cerrojo, un hilo puede observar ``_model`` ya asignado
+# mientras ``_preprocessor`` sigue a None.
+_load_lock = threading.Lock()
+_clf_load_lock = threading.Lock()
 
 # Rangos absolutos amplios para bloquear errores de entrada evidentes sin
 # confundir drift de mercado con datos imposibles.
@@ -45,12 +66,36 @@ ABSOLUTE_RANGES = {
 }
 
 
+def require_api_key(api_key: str | None = Depends(_api_key_header)) -> None:
+    """Exige ``X-API-Key`` unicamente si ``GOLD_API_KEY`` esta configurada."""
+    if not _API_KEY:
+        return
+    if not api_key or not secrets.compare_digest(api_key, _API_KEY):
+        raise HTTPException(status_code=401, detail="Clave de API invalida o ausente")
+
+
+@app.middleware("http")
+async def limit_body_size(request: Request, call_next):
+    """Rechaza cuerpos demasiado grandes antes de deserializar el JSON."""
+    declared = request.headers.get("content-length")
+    if declared is not None:
+        try:
+            if int(declared) > MAX_BODY_BYTES:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": f"Cuerpo demasiado grande (maximo {MAX_BODY_BYTES} bytes)"},
+                )
+        except ValueError:
+            return JSONResponse(status_code=400, content={"detail": "Content-Length invalido"})
+    return await call_next(request)
+
+
 def _parse_date(value: str) -> date:
     """Acepta exclusivamente fechas ISO ``YYYY-MM-DD``."""
     if not isinstance(value, str) or not _DATE_PATTERN.fullmatch(value):
         raise HTTPException(status_code=422, detail="Fecha invalida (use YYYY-MM-DD)")
     try:
-        return datetime.strptime(value, "%Y-%m-%d").date()
+        return date.fromisoformat(value)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail="Fecha invalida (use YYYY-MM-DD)") from exc
 
@@ -119,48 +164,87 @@ def _check_artifact_compatibility(model, preprocessor, features: list[str]) -> N
 
 
 def _ensure_loaded() -> None:
+    """Carga perezosa y thread-safe de los artefactos de regresion."""
     global _model, _preprocessor, _features
     if _model is not None:
         return
-    try:
-        cfg = get_config()
-        model, preprocessor, features = load_model_artifacts(cfg)
-        _check_artifact_compatibility(model, preprocessor, features)
-        _model, _preprocessor, _features = model, preprocessor, features
-    except FileNotFoundError as exc:
-        logger.warning("Artefactos de regresion no disponibles: %s", exc)
-        raise HTTPException(
-            status_code=503,
-            detail="Modelo de regresion no disponible; ejecute el entrenamiento.",
-        ) from exc
-    except Exception as exc:  # joblib puede lanzar varios errores.
-        logger.exception("No se pudieron cargar los artefactos de regresion")
-        raise HTTPException(status_code=503, detail="Artefactos de regresion invalidos.") from exc
+    with _load_lock:
+        if _model is not None:  # otro hilo termino la carga mientras esperabamos
+            return
+        try:
+            cfg = get_config()
+            model, preprocessor, features = load_model_artifacts(cfg)
+            _check_artifact_compatibility(model, preprocessor, features)
+        except FileNotFoundError as exc:
+            logger.warning("Artefactos de regresion no disponibles: %s", exc)
+            raise HTTPException(
+                status_code=503,
+                detail="Modelo de regresion no disponible; ejecute el entrenamiento.",
+            ) from exc
+        except Exception as exc:  # joblib puede lanzar varios errores.
+            logger.exception("No se pudieron cargar los artefactos de regresion")
+            raise HTTPException(
+                status_code=503, detail="Artefactos de regresion invalidos."
+            ) from exc
+        # ``_model`` se asigna EL ULTIMO: es el centinela que leen los demas
+        # hilos, asi que no debe hacerse visible antes que sus dependencias.
+        _preprocessor, _features = preprocessor, features
+        _model = model
 
 
 def _ensure_clf_loaded() -> None:
+    """Carga perezosa y thread-safe de los artefactos de clasificacion."""
     global _clf, _clf_pp, _clf_features
     if _clf is not None:
         return
-    try:
-        clf, clf_pp, clf_features = load_classifier_artifacts()
-        _check_artifact_compatibility(clf, clf_pp, clf_features)
-        _clf, _clf_pp, _clf_features = clf, clf_pp, clf_features
-    except FileNotFoundError as exc:
-        logger.warning("Artefactos de clasificacion no disponibles: %s", exc)
-        raise HTTPException(
-            status_code=503,
-            detail="Clasificador no disponible; ejecute el notebook de direccion.",
-        ) from exc
-    except Exception as exc:
-        logger.exception("No se pudieron cargar los artefactos de clasificacion")
-        raise HTTPException(
-            status_code=503, detail="Artefactos de clasificacion invalidos."
-        ) from exc
+    with _clf_load_lock:
+        if _clf is not None:
+            return
+        try:
+            clf, clf_pp, clf_features = load_classifier_artifacts()
+            _check_artifact_compatibility(clf, clf_pp, clf_features)
+        except FileNotFoundError as exc:
+            logger.warning("Artefactos de clasificacion no disponibles: %s", exc)
+            raise HTTPException(
+                status_code=503,
+                detail="Clasificador no disponible; ejecute el notebook de direccion.",
+            ) from exc
+        except Exception as exc:
+            logger.exception("No se pudieron cargar los artefactos de clasificacion")
+            raise HTTPException(
+                status_code=503, detail="Artefactos de clasificacion invalidos."
+            ) from exc
+        _clf_pp, _clf_features = clf_pp, clf_features
+        _clf = clf
 
 
+@functools.lru_cache(maxsize=1)
 def _model_version() -> str:
-    return str(get_config()["model"].get("version", "unknown"))
+    """Version del modelo, cacheada: antes se leia el YAML en cada peticion.
+
+    Una configuracion sin seccion ``model`` provocaba un ``KeyError`` y, por
+    tanto, un HTTP 500 en cada prediccion. Los metadatos no son esenciales para
+    responder, asi que se degradan a ``unknown`` con un aviso en el log.
+    """
+    try:
+        return str(get_config()["model"].get("version", "unknown"))
+    except (KeyError, TypeError, AttributeError):
+        logger.warning("model.version no configurado; se reporta 'unknown'")
+        return "unknown"
+
+
+@functools.lru_cache(maxsize=1)
+def _primary_horizon() -> int:
+    """Horizonte principal declarado en configuracion.
+
+    Antes estaba codificado a 1 en las respuestas, de modo que la API habria
+    mentido sobre su propio contrato si se cambiaba ``target.primary_horizon``.
+    """
+    try:
+        return int(get_config()["target"]["primary_horizon"])
+    except (KeyError, TypeError, ValueError):
+        logger.warning("target.primary_horizon no configurado; se asume 1")
+        return 1
 
 
 class PredictRequest(BaseModel):
@@ -168,7 +252,9 @@ class PredictRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     date: str = Field(..., min_length=10, max_length=10)
-    features: dict[str, float] = Field(...)
+    # ``max_length`` lo aplica Pydantic durante la validacion del modelo, de
+    # modo que un diccionario desmesurado se rechaza sin recorrerlo entero.
+    features: dict[str, float] = Field(..., max_length=MAX_FEATURES)
 
 
 class PredictResponse(BaseModel):
@@ -205,9 +291,9 @@ def ready():
     return {"status": "ready", "model": "gold_spot"}
 
 
-@app.post("/predict", response_model=PredictResponse)
+@app.post("/predict", response_model=PredictResponse, dependencies=[Depends(require_api_key)])
 def predict(req: PredictRequest):
-    """Predice el nivel de oro a un día hábil."""
+    """Predice el nivel de oro al horizonte principal configurado."""
     parsed_date = _parse_date(req.date)
     _ensure_loaded()
     X = _validate_features(req.features, _features)
@@ -220,15 +306,19 @@ def predict(req: PredictRequest):
         raise HTTPException(status_code=503, detail="El modelo devolvio una prediccion no finita")
     return PredictResponse(
         date=parsed_date.isoformat(),
-        horizon_days=1,
+        horizon_days=_primary_horizon(),
         prediction_usd_per_oz=round(prediction, 2),
         model_version=_model_version(),
     )
 
 
-@app.post("/predict_direction", response_model=DirectionResponse)
+@app.post(
+    "/predict_direction",
+    response_model=DirectionResponse,
+    dependencies=[Depends(require_api_key)],
+)
 def predict_direction(req: PredictRequest):
-    """Predice la probabilidad de que el oro suba en t+1."""
+    """Probabilidad de que el oro suba al horizonte principal configurado."""
     parsed_date = _parse_date(req.date)
     _ensure_clf_loaded()
     X = _validate_features(req.features, _clf_features)
@@ -243,7 +333,7 @@ def predict_direction(req: PredictRequest):
         )
     return DirectionResponse(
         date=parsed_date.isoformat(),
-        horizon_days=1,
+        horizon_days=_primary_horizon(),
         probability_up=round(probability, 4),
         direction="up" if probability >= 0.5 else "down",
         model_version=_model_version(),

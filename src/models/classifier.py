@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import joblib
 import numpy as np
@@ -11,6 +10,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 
 from src.config import get_config, path_from_root
+from src.utils import atomic_write_joblib, atomic_write_text
 
 
 def _validate_feature_list(feature_list: list[str]) -> None:
@@ -20,22 +20,9 @@ def _validate_feature_list(feature_list: list[str]) -> None:
         raise ValueError("feature_list contiene columnas duplicadas")
 
 
-def _atomic_joblib(value, path: Path) -> None:
-    temporary = path.with_name(f".{path.name}.tmp")
-    try:
-        joblib.dump(value, temporary)
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
-def _atomic_text(content: str, path: Path) -> None:
-    temporary = path.with_name(f".{path.name}.tmp")
-    try:
-        temporary.write_text(content, encoding="utf-8")
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
+# Alias retrocompatibles: la implementacion unica vive en ``src.utils``.
+_atomic_joblib = atomic_write_joblib
+_atomic_text = atomic_write_text
 
 
 def make_direction_targets(df: pd.DataFrame, horizons: list[int]) -> pd.DataFrame:
@@ -45,18 +32,51 @@ def make_direction_targets(df: pd.DataFrame, horizons: list[int]) -> pd.DataFram
     if not horizons or any(isinstance(h, bool) or int(h) != h or int(h) < 1 for h in horizons):
         raise ValueError("horizons debe contener enteros positivos")
     out = df.copy()
-    for h in horizons:
-        h = int(h)
+    if out["gold_spot"].isna().any():
+        raise ValueError("gold_spot contiene nulos: no se puede etiquetar la direccion")
+    for horizon in horizons:
+        h = int(horizon)
         col = f"target_{h}"
         if col not in out.columns:
             raise ValueError(f"Falta {col}: ejecute primero make_targets (fase 5)")
+        # Sin esta validacion un target nulo se convierte silenciosamente en 0
+        # ("baja"), porque ``NaN > x`` es False. Eso inventa etiquetas negativas
+        # en las ultimas filas de la serie o ante huecos de datos.
+        if out[col].isna().any():
+            n_null = int(out[col].isna().sum())
+            raise ValueError(
+                f"{col} contiene {n_null} nulos: eliminelos antes de etiquetar la "
+                "direccion (make_targets ya descarta las filas sin futuro)"
+            )
+        # Los empates se etiquetan como 0 ("no sube"), criterio que deben
+        # replicar las metricas direccionales.
         out[f"dir_{h}"] = (out[col] > out["gold_spot"]).astype(np.int8)
     return out
 
 
-def fit_direction_classifier(X_train: np.ndarray, y_train: np.ndarray, seed: int = 42):
-    """Entrena un RandomForest calibrado por validacion cruzada."""
+def fit_direction_classifier(
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    seed: int = 42,
+    horizon: int = 1,
+    n_splits: int = 3,
+    temporal_calibration: bool = True,
+):
+    """Entrena un RandomForest calibrado por validacion cruzada TEMPORAL.
+
+    ``CalibratedClassifierCV(cv=3)`` usa ``StratifiedKFold``, que mezcla
+    fechas: cada calibrador aprende su transformacion de probabilidad viendo
+    observaciones posteriores a su propio pliegue de validacion. En series
+    temporales eso es fuga. Por defecto se usa
+    ``TimeSeriesSplit(n_splits, gap=horizon)``, con un hueco igual al horizonte
+    para que la etiqueta del pliegue de entrenamiento no alcance al de
+    calibracion.
+
+    ``temporal_calibration=False`` restaura el comportamiento anterior; solo es
+    razonable con datos sin orden temporal.
+    """
     from sklearn.calibration import CalibratedClassifierCV
+    from sklearn.model_selection import TimeSeriesSplit
 
     X_train = np.asarray(X_train, dtype=float)
     y_train = np.asarray(y_train).reshape(-1)
@@ -76,7 +96,22 @@ def fit_direction_classifier(X_train: np.ndarray, y_train: np.ndarray, seed: int
         random_state=seed,
         n_jobs=-1,
     )
-    clf = CalibratedClassifierCV(estimator=base, method="isotonic", cv=3)
+    if not isinstance(horizon, int) or isinstance(horizon, bool) or horizon < 1:
+        raise ValueError("horizon debe ser un entero positivo")
+    if not isinstance(n_splits, int) or isinstance(n_splits, bool) or n_splits < 2:
+        raise ValueError("n_splits debe ser un entero >= 2")
+    if temporal_calibration:
+        min_rows = (n_splits + 1) * (horizon + 1)
+        if len(X_train) < min_rows:
+            raise ValueError(
+                f"Se necesitan al menos {min_rows} filas para calibrar con "
+                f"TimeSeriesSplit(n_splits={n_splits}, gap={horizon}); "
+                f"recibidas {len(X_train)}"
+            )
+        cv = TimeSeriesSplit(n_splits=n_splits, gap=horizon)
+    else:
+        cv = n_splits
+    clf = CalibratedClassifierCV(estimator=base, method="isotonic", cv=cv)
     clf.fit(X_train, y_train.astype(np.int8))
     return clf
 

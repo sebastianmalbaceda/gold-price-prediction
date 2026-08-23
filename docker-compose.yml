@@ -5,7 +5,11 @@ services:
   api:
     build: .
     ports:
-      - "${API_PORT:-8000}:8000"
+      # Por defecto solo escucha en loopback; la exposición pública exige un proxy autenticado.
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    environment:
+      GOLD_API_KEY: ${GOLD_API_KEY:-}
+      API_MAX_BODY_BYTES: ${API_MAX_BODY_BYTES:-131072}
     volumes:
       # Los artefactos se regeneran fuera de la imagen y se montan en solo lectura.
       - ./models:/app/models:ro

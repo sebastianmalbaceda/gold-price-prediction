@@ -10,11 +10,9 @@ from __future__ import annotations
 
 import copy
 import json
-import random
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Callable, Iterable
 
 import joblib
 import numpy as np
@@ -25,6 +23,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from src.config import path_from_root
+from src.utils import atomic_write, set_seed
 
 
 def get_device(prefer_gpu: bool = True) -> torch.device:
@@ -62,16 +61,13 @@ def device_report(device: torch.device | str | None = None) -> dict:
 
 
 def set_torch_seed(seed: int = 42) -> None:
-    """Fija semillas Python, NumPy y PyTorch para reproducibilidad."""
-    if not isinstance(seed, int) or isinstance(seed, bool):
-        raise ValueError("seed debe ser un entero")
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    """Fija semillas Python, NumPy y PyTorch para reproducibilidad.
+
+    Delega en :func:`src.utils.set_seed`, que ya cubre Python, NumPy y PyTorch
+    (incluido cuDNN determinista). Antes ambas funciones mantenian copias
+    independientes de la misma logica y podian divergir.
+    """
+    set_seed(seed)
 
 
 def make_sequences(
@@ -367,14 +363,8 @@ def predict_proba(
     return _predict_prob(model, loader, selected_device)
 
 
-def _atomic_write(path: Path, writer: Callable[[Path], None]) -> None:
-    """Escribe un artefacto en temporal y lo reemplaza de forma atomica."""
-    temporary = path.with_name(f".{path.name}.tmp")
-    try:
-        writer(temporary)
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
+# Alias retrocompatible: la implementacion unica vive en ``src.utils``.
+_atomic_write = atomic_write
 
 
 def save_deep_artifacts(
@@ -392,7 +382,7 @@ def save_deep_artifacts(
     if not feature_list or len(set(feature_list)) != len(feature_list):
         raise ValueError("feature_list debe ser no vacia y no contener duplicados")
     if not isinstance(metadata, dict):
-        raise ValueError("metadata debe ser un diccionario")
+        raise TypeError("metadata debe ser un diccionario")
 
     base = path_from_root("models")
     base.mkdir(parents=True, exist_ok=True)

@@ -45,19 +45,73 @@ def mape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Porcentaje de cambios cuyo signo predicho coincide con el real."""
+    """Porcentaje de cambios consecutivos cuyo signo predicho coincide con el real.
+
+    ADVERTENCIA metodologica: esta metrica compara ``diff(y_true)`` con
+    ``diff(y_pred)``, es decir, la variacion entre dos observaciones
+    consecutivas de la serie objetivo. Para forecasting a horizonte ``h`` la
+    pregunta relevante es otra (sube o baja respecto al nivel conocido hoy);
+    para eso debe usarse :func:`forecast_directional_accuracy`.
+
+    Las observaciones con variacion real nula se excluyen del denominador: en
+    caso contrario ``np.sign(0) == np.sign(0)`` las contabiliza como aciertos
+    y una serie plana devolveria 100 % de forma espuria.
+    """
     y_true, y_pred = _numeric_pair(y_true, y_pred)
     if len(y_true) < 2:
         return float("nan")
     change_true = np.diff(y_true)
     change_pred = np.diff(y_pred)
-    return float(np.mean(np.sign(change_true) == np.sign(change_pred)) * 100)
+    moved = change_true != 0
+    if not moved.any():
+        return float("nan")
+    hits = np.sign(change_true[moved]) == np.sign(change_pred[moved])
+    return float(np.mean(hits) * 100)
+
+
+def forecast_directional_accuracy(
+    y_current: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray
+) -> float:
+    """Acierto direccional real de un forecast a horizonte ``h``.
+
+    Compara el signo de ``y_true - y_current`` (movimiento observado desde el
+    ultimo nivel conocido) con el de ``y_pred - y_current`` (movimiento
+    pronosticado). Es la definicion coherente con ``make_direction_targets``,
+    donde los empates se tratan como "no sube".
+
+    Parameters
+    ----------
+    y_current:
+        Nivel observable al emitir la prediccion (``gold_spot`` en ``t``).
+    y_true:
+        Nivel realizado en ``t + h`` (``target_h``).
+    y_pred:
+        Nivel pronosticado para ``t + h``.
+    """
+    current = np.asarray(y_current, dtype=float).reshape(-1)
+    true, pred = _numeric_pair(y_true, y_pred)
+    if current.size != true.size:
+        raise ValueError("y_current debe tener la misma longitud que y_true")
+    if not np.isfinite(current).all():
+        raise ValueError("y_current no acepta NaN ni infinitos")
+    return float(np.mean((true > current) == (pred > current)) * 100)
 
 
 def regression_metrics(
-    y_true: np.ndarray, y_pred: np.ndarray, horizon: int = 1
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    horizon: int = 1,
+    y_current: np.ndarray | None = None,
 ) -> dict[str, float]:
-    """Conjunto completo de metricas de regresion/forecasting."""
+    """Conjunto completo de metricas de regresion/forecasting.
+
+    Si se proporciona ``y_current`` (nivel conocido en ``t``), la clave
+    ``directional_accuracy`` se calcula con
+    :func:`forecast_directional_accuracy`, que es la definicion correcta para
+    forecasting. Ademas se incluye ``directional_accuracy_definition`` para
+    dejar constancia del criterio empleado. Sin ``y_current`` se conserva el
+    comportamiento historico por compatibilidad hacia atras.
+    """
     from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
     if not isinstance(horizon, (int, np.integer)) or isinstance(horizon, bool) or horizon < 1:
@@ -66,6 +120,12 @@ def regression_metrics(
     if len(y_true) < 2:
         raise ValueError("R2 requiere al menos dos observaciones")
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
+    if y_current is None:
+        da = directional_accuracy(y_true, y_pred)
+        da_definition = "consecutive_diff"
+    else:
+        da = forecast_directional_accuracy(y_current, y_true, y_pred)
+        da_definition = "vs_current_level"
     return {
         "horizon": int(horizon),
         "mae": float(mean_absolute_error(y_true, y_pred)),
@@ -73,7 +133,8 @@ def regression_metrics(
         "r2": float(r2_score(y_true, y_pred)),
         "smape": smape(y_true, y_pred),
         "mape": mape(y_true, y_pred),
-        "directional_accuracy": directional_accuracy(y_true, y_pred),
+        "directional_accuracy": da,
+        "directional_accuracy_definition": da_definition,
         "n": int(len(y_true)),
     }
 
@@ -83,7 +144,17 @@ def metrics_table(rows: list[dict]) -> pd.DataFrame:
     if not rows:
         return pd.DataFrame()
     df = pd.DataFrame(rows)
-    metric_cols = ["horizon", "mae", "rmse", "r2", "smape", "mape", "directional_accuracy", "n"]
+    metric_cols = [
+        "horizon",
+        "mae",
+        "rmse",
+        "r2",
+        "smape",
+        "mape",
+        "directional_accuracy",
+        "directional_accuracy_definition",
+        "n",
+    ]
     present = [c for c in metric_cols if c in df.columns]
     extra = [c for c in df.columns if c not in metric_cols]
     return df[extra + present]

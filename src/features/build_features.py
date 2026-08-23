@@ -70,19 +70,55 @@ def _calendar_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _exogenous_features(df: pd.DataFrame, exog: list[str], lags: list[int]) -> pd.DataFrame:
+def _exogenous_features(
+    df: pd.DataFrame,
+    exog: list[str],
+    lags: list[int],
+    fit_mask: pd.Series | None = None,
+) -> pd.DataFrame:
+    """Lags y retornos logaritmicos de las exogenas.
+
+    ``fit_mask`` delimita las filas que pueden usarse para tomar decisiones de
+    diseño (tipicamente, solo el tramo de entrenamiento). Sin ella, la simple
+    decision de "¿esta exogena admite retornos logaritmicos?" dependeria de
+    observaciones futuras, de modo que la *composicion misma del feature set*
+    filtraria informacion del periodo de validacion o test.
+    """
     for col in exog:
         if col in ("date", "gold_spot"):
             continue
         series = pd.to_numeric(df[col], errors="coerce")
+        # Solo calcular retornos log si todos los valores observados son
+        # estrictamente positivos (indices, precios y tipos pueden tener
+        # escalas distintas). La decision se toma exclusivamente sobre el
+        # tramo de entrenamiento cuando este disponible.
+        decision = series[fit_mask] if fit_mask is not None else series
+        observed_fit = decision.dropna()
+        if observed_fit.empty:  # sin datos en train: se recurre a la serie completa
+            observed_fit = series.dropna()
+        observed_all = series.dropna()
+        positive_in_fit = not observed_fit.empty and bool((observed_fit > 0).all())
+        positive_overall = not observed_all.empty and bool((observed_all > 0).all())
+        if positive_in_fit and not positive_overall:
+            # La decision tomada con datos de entrenamiento queda invalidada por
+            # observaciones posteriores no positivas: el logaritmo no esta
+            # definido en todo el rango, asi que no se crea la columna. Se avisa
+            # porque significa que la composicion del feature set depende del
+            # futuro (leakage de esquema, no de valores).
+            warnings.warn(
+                f"'{col}' es positiva en entrenamiento pero no en el resto del "
+                "rango: se omiten sus retornos logaritmicos. Congela el esquema "
+                "de features en entrenamiento para evitar esta dependencia.",
+                UserWarning,
+                stacklevel=2,
+            )
+        use_log_returns = positive_in_fit and positive_overall
+        # np.log se calcula una sola vez por columna, no una vez por lag.
+        log_series = np.log(series) if use_log_returns else None
         for lag in lags:
             df[f"{col}_lag{lag}"] = series.shift(lag)
-            # Solo calcular retornos log si todos los valores observados son
-            # estrictamente positivos (indices, precios y tipos pueden tener
-            # escalas distintas).
-            observed = series.dropna()
-            if not observed.empty and (observed > 0).all():
-                df[f"{col}_ret_lag{lag}"] = np.log(series) - np.log(series).shift(lag)
+            if log_series is not None:
+                df[f"{col}_ret_lag{lag}"] = log_series - log_series.shift(lag)
         # Indicador de dato original ausente (antes del ffill) si está disponible
     return df
 
@@ -110,6 +146,23 @@ def _gap_indicators(df: pd.DataFrame, exog: list[str], raw: pd.DataFrame | None)
     missing_df = missing_df.reset_index(drop=True)
     # Concatenar de una vez (evita fragmentación del DataFrame)
     return pd.concat([df.reset_index(drop=True), missing_df], axis=1)
+
+
+def _fit_mask(dates: pd.Series, cfg: dict) -> pd.Series | None:
+    """Mascara booleana de las filas pertenecientes al tramo de entrenamiento.
+
+    Devuelve ``None`` si la configuracion no define ``split.train``, en cuyo
+    caso el llamante usa la serie completa (comportamiento historico).
+    """
+    train_range = cfg.get("split", {}).get("train")
+    if not train_range or len(train_range) < 2:
+        return None
+    try:
+        train_end = pd.Timestamp(train_range[1])
+    except (TypeError, ValueError):
+        return None
+    mask = dates <= train_end
+    return mask if bool(mask.any()) else None
 
 
 def build_features(
@@ -144,7 +197,7 @@ def build_features(
             out = _calendar_features(out)
 
         exog = [c for c in df.columns if c not in ("date", "gold_spot")]
-        out = _exogenous_features(out, exog, exogenous_lags)
+        out = _exogenous_features(out, exog, exogenous_lags, _fit_mask(dates, cfg))
         out = _gap_indicators(out, exog, raw)
 
         # Defensa en profundidad: eliminar columnas completamente vacías

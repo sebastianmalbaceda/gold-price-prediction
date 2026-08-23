@@ -17,8 +17,16 @@ data:
   # fiable de gold_spot + exógenas diarias empieza ~2000)
   start_date: "2000-01-01"
   end_date: "2025-09-12"
-  # Umbral de nulos tras forward-fill para descartar features
+  # Umbral de nulos TRAS forward-fill para descartar features. Ojo: por sí
+  # solo no detecta series casi vacías, porque el ffill las deja sin NaN.
   max_missing_after_ffill: 0.10
+  # Cobertura mínima REAL (observaciones no nulas ANTES del forward-fill).
+  # 0.0 = comportamiento histórico. Subirlo (p. ej. 0.30) descarta exógenas
+  # que solo sobreviven porque el ffill propagó unas pocas observaciones.
+  min_coverage_before_ffill: 0.0
+  # Días hábiles máximos que se permite propagar un valor de exógena.
+  # null = sin límite (comportamiento histórico).
+  max_ffill_gap_days: null
 
 target:
   # Variable objetivo (serie temporal financiera: regresión de precio)

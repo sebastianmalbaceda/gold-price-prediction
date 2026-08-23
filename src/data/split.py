@@ -29,7 +29,7 @@ def temporal_split(df: pd.DataFrame, cfg: dict | None = None) -> dict[str, pd.Da
 
     split_cfg = cfg.get("split")
     if not isinstance(split_cfg, dict):
-        raise ValueError("La configuracion debe definir split.train/val/test")
+        raise TypeError("La configuracion debe definir split.train/val/test")
 
     ranges: dict[str, tuple[pd.Timestamp, pd.Timestamp]] = {}
     for name in ("train", "val", "test"):
@@ -56,6 +56,78 @@ def temporal_split(df: pd.DataFrame, cfg: dict | None = None) -> dict[str, pd.Da
             raise ValueError(f"El split {name} no contiene observaciones")
         parts[name] = part
     return parts
+
+
+def purge_label_overlap(
+    parts: dict[str, pd.DataFrame],
+    horizon: int | list[int] | None = None,
+    cfg: dict | None = None,
+    splits: tuple[str, ...] = ("train", "val"),
+) -> dict[str, pd.DataFrame]:
+    """Elimina el solape de etiquetas entre particiones consecutivas.
+
+    ``target_h`` se construye como ``gold_spot.shift(-h)`` sobre la serie
+    completa y **antes** de partir. Como :func:`temporal_split` divide por la
+    fecha de las *features* y no por la fecha a la que pertenece la etiqueta,
+    las ultimas ``h`` filas de ``train`` llevan una etiqueta observada ya en
+    ``val``, y las ultimas ``h`` de ``val`` una etiqueta observada en ``test``.
+    Eso es una fuga de etiquetas aunque las columnas ``target_*`` nunca se usen
+    como predictores, y el ``gap`` de ``TimeSeriesSplit`` no la evita: ese gap
+    solo protege los pliegues internos de la validacion cruzada.
+
+    Esta funcion recorta las ultimas ``h`` filas de cada particion indicada en
+    ``splits`` (por defecto ``train`` y ``val``; ``test`` no se toca porque no
+    hay ninguna particion posterior que contaminar).
+
+    Parameters
+    ----------
+    parts:
+        Diccionario devuelto por :func:`temporal_split`.
+    horizon:
+        Horizonte a purgar. Si se pasa una lista se usa el maximo. Si es
+        ``None`` se toma ``max(cfg['target']['horizons'])``.
+    cfg:
+        Configuracion; solo se lee si ``horizon`` es ``None``.
+    splits:
+        Particiones a recortar.
+
+    Returns
+    -------
+    dict[str, pandas.DataFrame]
+        Nuevo diccionario con las particiones purgadas. La entrada original no
+        se modifica.
+    """
+    if not isinstance(parts, dict) or not parts:
+        raise ValueError("parts debe ser un diccionario no vacio de particiones")
+    if horizon is None:
+        cfg = cfg or get_config()
+        horizon = cfg.get("target", {}).get("horizons")
+        if not horizon:
+            raise ValueError("No se pudo determinar el horizonte a purgar")
+    if isinstance(horizon, (list, tuple)):
+        if not horizon:
+            raise ValueError("horizon no puede ser una lista vacia")
+        horizon = max(horizon)
+    if not isinstance(horizon, numbers.Integral) or isinstance(horizon, bool) or int(horizon) < 1:
+        raise ValueError("horizon debe ser un entero positivo")
+    horizon = int(horizon)
+
+    out = dict(parts)
+    for name in splits:
+        part = out.get(name)
+        if part is None:
+            continue
+        if len(part) <= horizon:
+            raise ValueError(
+                f"El split '{name}' tiene {len(part)} filas y no admite purgar "
+                f"{horizon}; revise los rangos de configuracion"
+            )
+        out[name] = part.iloc[:-horizon].copy().reset_index(drop=True)
+        print(
+            f"  [purge] {name}: {len(part)} -> {len(out[name])} filas "
+            f"(-{horizon} por solape de etiquetas h={horizon})"
+        )
+    return out
 
 
 def get_temporal_splitter(cfg: dict | None = None) -> TimeSeriesSplit:

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
 import random
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -11,12 +13,48 @@ import numpy as np
 from src.config import path_from_root
 
 
+def atomic_write(path: Path, writer: Callable[[Path], None]) -> Path:
+    """Escribe ``path`` de forma atomica delegando el volcado en ``writer``.
+
+    Es la unica implementacion del patron escribir-temporal-y-renombrar del
+    proyecto; antes estaba duplicada en ``train_model``, ``classifier``,
+    ``deep_learning``, ``save_json`` y ``scripts/monitor_drift.py``.
+
+    El nombre temporal incluye el PID para que dos procesos que guarden el
+    mismo artefacto en paralelo no se pisen el fichero intermedio.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        writer(temporary)
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return path
+
+
+def atomic_write_text(content: str, path: Path, encoding: str = "utf-8") -> Path:
+    """Escribe texto de forma atomica."""
+    return atomic_write(path, lambda p: p.write_text(content, encoding=encoding))
+
+
+def atomic_write_joblib(value, path: Path) -> Path:
+    """Serializa un objeto con joblib de forma atomica."""
+    import joblib
+
+    return atomic_write(path, lambda p: joblib.dump(value, p))
+
+
 def set_seed(seed: int = 42) -> None:
     """Fija las fuentes de aleatoriedad usadas por el proyecto."""
     if not isinstance(seed, int) or isinstance(seed, bool):
-        raise ValueError("seed debe ser un entero")
+        raise TypeError("seed debe ser un entero")
     random.seed(seed)
-    np.random.seed(seed)
+    # ``np.random.seed`` fija el generador legado global. Se mantiene porque
+    # scikit-learn y varias dependencias siguen leyendolo; el codigo propio
+    # debe usar ``np.random.default_rng(seed)``.
+    np.random.seed(seed)  # noqa: NPY002
     try:
         import torch
     except ImportError:
@@ -75,13 +113,6 @@ def save_json(obj, name: str, subdir: str = "") -> Path:
     out_dir = path_from_root("reports", subdir) if subdir else path_from_root("reports")
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / name
-    temporary = path.with_name(f".{path.name}.tmp")
-    try:
-        temporary.write_text(
-            json.dumps(obj, indent=2, default=str, ensure_ascii=False), encoding="utf-8"
-        )
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
+    atomic_write_text(json.dumps(obj, indent=2, default=str, ensure_ascii=False), path)
     print(f"[json] {path}")
     return path

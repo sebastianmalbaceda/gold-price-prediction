@@ -50,3 +50,36 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["src*"]
+
+# Marcador PEP 561: sin este fichero los consumidores del paquete ignoran las
+# anotaciones de tipo de ``src`` aunque el codigo este anotado.
+[tool.setuptools.package-data]
+src = ["py.typed"]
+
+# Las herramientas de formato y tipado se configuraban solo mediante argumentos
+# de linea de comandos, repetidos en .pre-commit-config.yaml y en el CI. Al
+# centralizarlas aqui, un desarrollador que ejecute `black .` o `isort .` en
+# local obtiene exactamente el mismo resultado que la CI.
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+line_length = 100
+known_first_party = ["src"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+# El codigo no esta anotado al 100 %; se empieza por avisos no bloqueantes en
+# lugar de activar --strict y generar cientos de errores inabordables.
+disallow_untyped_defs = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
